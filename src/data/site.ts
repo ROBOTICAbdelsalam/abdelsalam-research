@@ -1,0 +1,99 @@
+// Central site configuration.
+// Source of truth: Abdelsalam's CV. Do not add facts here that the CV
+// doesn't support — bracketed placeholders below are intentional and
+// should stay that way until real values are supplied.
+
+export const siteConfig = {
+  name: "Abdelsalam",
+  fullName: "Abdelsalam Ali Abdelsalam Mohamed",
+  title: "AI & Robotics Engineer",
+  // The CV's "supporting positioning" line — used as the Hero eyebrow.
+  positioning: "Machine Learning · ROS 2 · Industrial Automation · Autonomous Systems",
+  tagline: "Researcher • Builder • AI Systems",
+  statement:
+    "Building intelligent systems at the intersection of Artificial Intelligence, Robotics, Data, Brain-Computer Interfaces and Intelligent Automation — grounded in 8+ years of industrial robotics and automation engineering, now formalized through an M.Sc. in Robotics and Automation.",
+
+  // Base URL used for canonical links, sitemap, robots and Open Graph tags.
+  // TODO: replace with your production domain before deploying.
+  url: "https://abdelsalam-research.vercel.app",
+
+  description:
+    "Abdelsalam Ali Abdelsalam Mohamed is an AI & Robotics Engineer with 8+ years in industrial robotics, automation and control, completing an M.Sc. in Robotics and Automation and researching adaptive brain-computer interfaces for industrial and medical robotics.",
+
+  keywords: [
+    "Abdelsalam",
+    "Abdelsalam Ali Abdelsalam Mohamed",
+    "AI & Robotics Engineer",
+    "Robotics Engineer",
+    "Automation Engineer",
+    "Brain-Computer Interfaces",
+    "Artificial Intelligence",
+    "Industrial Automation",
+    "PLC",
+    "SCADA",
+    "ROS 2",
+    "Machine Learning",
+    "EEG",
+    "Collaborative Robots",
+    "Autonomous Mobile Robots",
+    "JAMK University of Applied Sciences",
+    "AI Agents",
+  ],
+
+  // Confirmed public contact details.
+  email: "abdelsalam.robotic.ai@outlook.com",
+  phone: "+358 45 867 0063",
+
+  // General location only (from the CV) — no street address is published.
+  location: "Helsinki, Finland",
+
+  // Present in the CV as "[SPECIFY - e.g. Finnish residence permit holder,
+  // eligible to work in the EU]". Left as an editable placeholder and not
+  // rendered anywhere in the UI until a real value is supplied.
+  workAuthorization: "Add work authorization status",
+
+  links: {
+    github: "https://github.com/ROBOTICAbdelsalam",
+    // Not present in the CV. Fill in to make the link appear.
+    googleScholar: "",
+    // Not present in the CV. Fill in to make the link appear.
+    orcid: "",
+    linkedin: "https://linkedin.com/in/abdelsalam-mohamed-5b4421344",
+  },
+
+  cvPath: "/cv/Abdelsalam-CV.pdf",
+} as const;
+
+// Hero credential strip — four facts only, each directly from the CV.
+export const heroCredentials = [
+  {
+    value: "8+ Years",
+    label: "Robotics & Automation",
+    description: "Engineering Experience",
+  },
+  {
+    value: "B.Sc.",
+    label: "Mechanical Power Engineering",
+    description: "Zagazig University",
+  },
+  {
+    value: "M.Sc.",
+    label: "Robotics & Automation",
+    description: "JAMK University of Applied Sciences",
+  },
+  {
+    value: "AI + Robotics",
+    label: "Research & Engineering",
+    description: "Intelligent Systems",
+  },
+] as const;
+
+export const navigation = [
+  { label: "Home", href: "/" },
+  { label: "Research", href: "/research" },
+  { label: "Projects", href: "/projects" },
+  { label: "Publications", href: "/publications" },
+  { label: "About", href: "/about" },
+  { label: "CV", href: "/cv" },
+  { label: "Contact", href: "/contact" },
+] as const;

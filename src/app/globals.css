@@ -1,26 +1,257 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbfbf9;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --foreground: #14161a;
+  --muted: #5b6068;
+  --border: #e6e6e2;
+  --border-strong: #d4d4cf;
+  --accent: #2954e5;
+  --accent-foreground: #ffffff;
+  --accent-soft: #2954e50f;
+  --trace: #0d8f8f;
+  --trace-soft: #0d8f8f14;
+  --grid-line: #14161a08;
+
+  /* Restrained secondary accents — used only in the capability grid. */
+  --violet: #6d5dd3;
+  --violet-soft: #6d5dd312;
+  --amber: #b5760c;
+  --amber-soft: #b5760c12;
+  --gold: #8a7412;
+  --gold-soft: #8a741212;
+  --signal-green: #1a8f5c;
+  --signal-green-soft: #1a8f5c12;
+}
+
+:root.dark {
+  --background: #08090b;
+  --surface: #101215;
+  --surface-raised: #16181c;
+  --foreground: #f2f3f5;
+  --muted: #9aa0aa;
+  --border: #1e2126;
+  --border-strong: #2a2e35;
+  --accent: #5b84ff;
+  --accent-foreground: #06070a;
+  --accent-soft: #5b84ff1a;
+  --trace: #2dd4c8;
+  --trace-soft: #2dd4c81a;
+  --grid-line: #f2f3f508;
+
+  --violet: #9b8aff;
+  --violet-soft: #9b8aff1a;
+  --amber: #e0a23d;
+  --amber-soft: #e0a23d1a;
+  --gold: #d4b94a;
+  --gold-soft: #d4b94a1a;
+  --signal-green: #3ecf8e;
+  --signal-green-soft: #3ecf8e1a;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-trace: var(--trace);
+  --color-trace-soft: var(--trace-soft);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-signal-green: var(--signal-green);
+  --color-signal-green-soft: var(--signal-green-soft);
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+
+  --animate-pulse-slow: pulse-slow 3.4s ease-in-out infinite;
+  --animate-flow: flow-dot 1.8s ease-in-out infinite;
+  --animate-flow-x: flow-x 2.4s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-signal-trace: signal-trace 2.6s linear infinite;
+  --animate-node-pulse: node-pulse 2.8s ease-in-out infinite;
+  --animate-divider-flow: divider-flow 6s ease-in-out infinite;
+
+  @keyframes signal-trace {
+    to {
+      stroke-dashoffset: -32;
+    }
+  }
+
+  @keyframes divider-flow {
+    0% {
+      left: 0%;
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    92% {
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes node-pulse {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes flow-dot {
+    0% {
+      top: 0%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes flow-x {
+    0% {
+      left: 0%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Very subtle radial glow behind a key interactive element — never the
+   whole background. Dark mode only; in light mode it's inert. */
+.signal-glow {
+  position: relative;
+}
+
+.signal-glow::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 60% 55% at 60% 40%,
+    var(--accent-soft),
+    transparent 70%
+  );
+  opacity: 0;
+}
+
+:root.dark .signal-glow::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
