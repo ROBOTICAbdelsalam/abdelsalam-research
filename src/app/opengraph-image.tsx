@@ -40,8 +40,8 @@ export default function OpengraphImage() {
             {siteConfig.positioning.toUpperCase()}
           </span>
           <span style={{ fontSize: 52, lineHeight: 1.15, maxWidth: 980 }}>
-            AI & Robotics Engineer bridging industrial automation,
-            robotics and brain-computer interfaces.
+            AI & Robotics Engineer building intelligent systems across
+            robotics, data and brain-computer interfaces.
           </span>
         </div>
 

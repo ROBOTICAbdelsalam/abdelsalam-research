@@ -50,7 +50,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav aria-label="Primary" className="hidden lg:flex items-center gap-1">
           {navigation.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -104,6 +104,7 @@ export function Header() {
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
+            aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground"
           >
@@ -113,7 +114,7 @@ export function Header() {
       </Container>
 
       {open ? (
-        <div className="lg:hidden border-t border-border bg-background">
+        <nav id="mobile-nav" aria-label="Mobile" className="lg:hidden border-t border-border bg-background">
           <Container className="flex flex-col py-4">
             {navigation.map((item) => (
               <Link
@@ -126,7 +127,7 @@ export function Header() {
               </Link>
             ))}
           </Container>
-        </div>
+        </nav>
       ) : null}
     </header>
   );

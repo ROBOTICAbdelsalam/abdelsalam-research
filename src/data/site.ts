@@ -7,8 +7,12 @@ export const siteConfig = {
   name: "Abdelsalam",
   fullName: "Abdelsalam Ali Abdelsalam Mohamed",
   title: "AI & Robotics Engineer",
-  // The CV's "supporting positioning" line — used as the Hero eyebrow.
-  positioning: "Machine Learning · ROS 2 · Industrial Automation · Autonomous Systems",
+  // Primary current positioning — used as the Hero eyebrow and the Open
+  // Graph image. Industrial Automation is real, historical experience (see
+  // engineeringCapabilities in data/research.ts and the About timeline) but
+  // deliberately doesn't lead here, since AI, Robotics and Intelligent
+  // Systems are the current specialization this site represents.
+  positioning: "Artificial Intelligence · Robotics · Intelligent Systems",
   tagline: "Researcher • Builder • AI Systems",
   statement:
     "Building intelligent systems at the intersection of Artificial Intelligence, Robotics, Data, Brain-Computer Interfaces and Intelligent Automation — grounded in 8+ years of industrial robotics and automation engineering, now formalized through an M.Sc. in Robotics and Automation.",

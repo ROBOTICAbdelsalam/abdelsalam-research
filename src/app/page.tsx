@@ -52,9 +52,7 @@ export default function Home() {
         </Container>
       </section>
 
-      <AnimatedSectionDivider tones={["signal-green", "accent", "trace"]} className="py-12 md:py-16" />
-
-      <section id="research" className="pb-24 md:pb-32 scroll-mt-16">
+      <section id="research" className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32 scroll-mt-16">
         <Container>
           <SectionHeading
             eyebrow="03 — Research Focus"
@@ -73,9 +71,7 @@ export default function Home() {
         </Container>
       </section>
 
-      <AnimatedSectionDivider tones={["trace", "violet", "accent"]} className="py-12 md:py-16" />
-
-      <section className="pb-24 md:pb-32">
+      <section className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32">
         <Container>
           <SectionHeading
             eyebrow="04 — Featured Research"
@@ -87,9 +83,7 @@ export default function Home() {
         </Container>
       </section>
 
-      <AnimatedSectionDivider tones={["accent", "gold", "trace"]} className="py-12 md:py-16" />
-
-      <section id="projects" className="pb-24 md:pb-32 scroll-mt-16">
+      <section id="projects" className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32 scroll-mt-16">
         <Container>
           <SectionHeading
             eyebrow="05 — Engineering Projects"
@@ -108,9 +102,7 @@ export default function Home() {
         </Container>
       </section>
 
-      <AnimatedSectionDivider tones={["violet", "accent", "amber"]} className="py-12 md:py-16" />
-
-      <section id="publications" className="pb-24 md:pb-32 scroll-mt-16">
+      <section id="publications" className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32 scroll-mt-16">
         <Container>
           <SectionHeading
             eyebrow="06 — Publications"
@@ -129,9 +121,7 @@ export default function Home() {
         </Container>
       </section>
 
-      <AnimatedSectionDivider tones={["trace", "signal-green", "accent"]} className="py-12 md:py-16" />
-
-      <section id="contact" className="pb-24 md:pb-32 scroll-mt-16">
+      <section id="contact" className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32 scroll-mt-16">
         <Container>
           <ContactCTA />
         </Container>
