@@ -97,6 +97,7 @@ export const navigation = [
   { label: "Research", href: "/research" },
   { label: "Projects", href: "/projects" },
   { label: "Publications", href: "/publications" },
+  { label: "Events", href: "/events" },
   { label: "About", href: "/about" },
   { label: "CV", href: "/cv" },
   { label: "Contact", href: "/contact" },

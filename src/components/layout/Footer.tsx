@@ -8,6 +8,7 @@ const footerNav = [
   { label: "Research", href: "/research" },
   { label: "Projects", href: "/projects" },
   { label: "Publications", href: "/publications" },
+  { label: "Events", href: "/events" },
   { label: "CV", href: "/cv" },
 ];
 

@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/research/hybrid-adaptive-bci",
     "/projects",
     "/publications",
+    "/events",
     "/about",
     "/cv",
     "/contact",

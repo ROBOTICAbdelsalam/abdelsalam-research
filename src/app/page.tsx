@@ -10,6 +10,7 @@ import { ResearchAreas } from "@/components/sections/ResearchAreas";
 import { FeaturedResearch } from "@/components/sections/FeaturedResearch";
 import { ProjectsGrid } from "@/components/sections/ProjectsGrid";
 import { PublicationsList } from "@/components/sections/PublicationsList";
+import { LatestActivity } from "@/components/sections/LatestActivity";
 import { ContactCTA } from "@/components/sections/ContactCTA";
 import { researchFocus, researchIntro } from "@/data/research";
 import { pipelineIntro } from "@/data/pipeline";
@@ -120,6 +121,8 @@ export default function Home() {
           </div>
         </Container>
       </section>
+
+      <LatestActivity />
 
       <section id="contact" className="pt-20 pb-24 border-t border-border md:pt-24 md:pb-32 scroll-mt-16">
         <Container>
