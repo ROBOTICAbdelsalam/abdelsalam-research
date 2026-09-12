@@ -14,8 +14,14 @@ export const siteConfig = {
   // Systems are the current specialization this site represents.
   positioning: "Artificial Intelligence · Robotics · Intelligent Systems",
   tagline: "Researcher • Builder • AI Systems",
-  statement:
-    "Building intelligent systems at the intersection of Artificial Intelligence, Robotics, Data, Brain-Computer Interfaces and Intelligent Automation — grounded in 8+ years of industrial robotics and automation engineering, now formalized through an M.Sc. in Robotics and Automation.",
+  // Hero-only copy (rendered in Hero.tsx). Split into three pieces so the
+  // four-word statement can be styled as the visual focal point.
+  heroLead: "I build intelligent systems that",
+  // Non-breaking spaces bind each "·" to the word before it, so a line
+  // break (e.g. on narrow screens) never strands a separator at line start.
+  heroFocus: "PERCEIVE · LEARN · DECIDE · ACT.",
+  heroSupporting:
+    "Connecting Artificial Intelligence, Robotics, and Data to build intelligent machines and autonomous systems that move intelligence into the physical world.",
 
   // Base URL used for canonical links, sitemap, robots and Open Graph tags.
   // TODO: replace with your production domain before deploying.

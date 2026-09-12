@@ -36,24 +36,36 @@ export function Hero() {
             </Reveal>
 
             <Reveal delay={0.05}>
+              {/* Hero-only display name — deliberately distinct from
+                  siteConfig.name (used in the header, footer and page
+                  metadata), which stays unchanged. */}
               <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium tracking-tight text-balance">
-                {siteConfig.name}
+                ABD ELSALAM
               </h1>
             </Reveal>
 
             <Reveal delay={0.1}>
-              <p className="mt-4 text-lg sm:text-xl text-trace font-mono tracking-tight">
+              <p className="mt-4 text-lg sm:text-xl text-trace font-mono uppercase tracking-wide">
                 {siteConfig.title}
               </p>
             </Reveal>
 
             <Reveal delay={0.15}>
-              <p className="mt-8 max-w-xl text-xl sm:text-2xl leading-relaxed text-foreground/90 text-balance">
-                {siteConfig.statement}
+              <p className="mt-8 max-w-xl text-lg sm:text-xl leading-snug text-foreground/80 text-balance">
+                {siteConfig.heroLead}
+              </p>
+              <p className="mt-1 max-w-xl font-display text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight text-balance">
+                {siteConfig.heroFocus}
               </p>
             </Reveal>
 
             <Reveal delay={0.2}>
+              <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-muted text-balance">
+                {siteConfig.heroSupporting}
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.25}>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Button href="/projects">
                   Explore My Work
@@ -67,7 +79,7 @@ export function Hero() {
             </Reveal>
 
             {socials.length > 0 && (
-              <Reveal delay={0.25}>
+              <Reveal delay={0.3}>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
                   {socials.map((item) => (
                     <a
@@ -91,7 +103,7 @@ export function Hero() {
           </Reveal>
         </div>
 
-        <Reveal delay={0.3} className="mt-20 md:mt-24">
+        <Reveal delay={0.35} className="mt-20 md:mt-24">
           <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {heroCredentials.map((item, index) => {
               const Icon = credentialIcons[index];
