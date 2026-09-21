@@ -3,6 +3,7 @@ export type EventType =
   | "Workshop"
   | "Seminar"
   | "Meetup"
+  | "User Group"
   | "Hackathon"
   | "Talk"
   | "Presentation"
@@ -41,6 +42,74 @@ export type EventItem = {
 // independently verified. Ordered most recent first; LatestActivity's
 // stable sort (by year) preserves this order for same-year entries.
 export const events: EventItem[] = [
+  {
+    slug: "devops-finland-netlight-september-2026",
+    title: "DevOps Finland September meetup",
+    date: "21 September 2026 · 17:00–20:30 EEST",
+    year: 2026,
+    location: "Netlight, Pohjoisesplanadi 33 A, 00100 Helsinki, Finland",
+    type: "Meetup",
+    status: "Attended",
+    description:
+      "Attended the DevOps Finland September meetup at Netlight, exploring agentic AI, cloud operations, software development, and the evolving role of AI agents.",
+    organization: "DevOps Finland",
+    topics: [
+      "DevOps",
+      "Agentic AI",
+      "Cloud Operations",
+      "AWS",
+      "AI Agents",
+      "Software Development",
+      "Networking",
+    ],
+    officialUrl: "https://www.meetup.com/devops-finland/events/316496752/",
+  },
+  {
+    slug: "microsoft-data-platform-user-group-innofactor-september-2026",
+    title: "Microsoft Data Platform User Group: In-person September meetup @ Innofactor",
+    date: "16 September 2026 · 17:00–20:00 EEST",
+    year: 2026,
+    location: "Innofactor, Keilaranta 9, 02150 Espoo, Finland",
+    type: "User Group",
+    status: "Attended",
+    description:
+      "Attended the Microsoft Data Platform User Group meetup at Innofactor, exploring Microsoft Fabric, data engineering, analytics, AI, and practical approaches to modern data platform workflows.",
+    organization: "Microsoft Data Platform User Group – Finland",
+    topics: [
+      "Microsoft Data Platform",
+      "Microsoft Fabric",
+      "Data Engineering",
+      "Analytics",
+      "AI",
+      "dbt",
+      "Data & AI",
+      "Networking",
+    ],
+    officialUrl:
+      "https://www.meetup.com/microsoft-data-platform-user-group-finland/events/316250213/",
+  },
+  {
+    slug: "apiops-helsinki-roasberg-september-2026",
+    title: "AI Discovery & API governance",
+    date: "15 September 2026 · 17:00–20:00 EEST",
+    year: 2026,
+    location: "Roasberg, Mikonkatu 13, Helsinki, Finland",
+    type: "Meetup",
+    status: "Attended",
+    description:
+      "Attended the APIOps Helsinki meetup exploring AI-driven API discovery, API governance, authorization, and the evolving role of APIs for AI agents.",
+    organization: "APIOps Helsinki",
+    topics: [
+      "AI Agents",
+      "APIs",
+      "API Governance",
+      "OpenAPI",
+      "Authorization",
+      "Automation",
+      "Networking",
+    ],
+    officialUrl: "https://www.meetup.com/apiops-helsinki/events/316084189/",
+  },
   {
     slug: "snowflake-finland-user-group-september-2026",
     title: "Snowflake Finland User Group Meeting",
