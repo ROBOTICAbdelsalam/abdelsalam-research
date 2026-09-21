@@ -102,6 +102,7 @@ export const navigation = [
   { label: "Home", href: "/" },
   { label: "Research", href: "/research" },
   { label: "Projects", href: "/projects" },
+  { label: "AI Lab", href: "/ai-lab" },
   { label: "Publications", href: "/publications" },
   { label: "Events", href: "/events" },
   { label: "About", href: "/about" },
