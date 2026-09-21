@@ -8,7 +8,7 @@ export type TechCategory = {
 // kept explicitly "(basic)" since that's how the CV itself frames it.
 export const techStack: TechCategory[] = [
   {
-    title: "AI & ML",
+    title: "AI and ML",
     items: [
       "Python",
       "PyTorch",
@@ -48,7 +48,7 @@ export const techStack: TechCategory[] = [
       "PLC",
       "SCADA",
       "HMI",
-      "Instrumentation & Control",
+      "Instrumentation and Control",
       "Predictive Maintenance",
       "IIoT",
       "Machine Safety",
@@ -59,7 +59,7 @@ export const techStack: TechCategory[] = [
     items: ["SQL (basic)", "Python", "Pandas", "NumPy", "APIs", "Data Processing"],
   },
   {
-    title: "AI Agents & Automation",
+    title: "AI Agents and Automation",
     items: ["n8n", "AI Agents", "Prompt Engineering", "RAG", "APIs"],
   },
   {

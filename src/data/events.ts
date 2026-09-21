@@ -56,7 +56,7 @@ export const events: EventItem[] = [
       "Data Platforms",
       "Data Engineering",
       "Snowflake",
-      "AI & Machine Learning",
+      "AI and Machine Learning",
       "Analytics",
       "Cloud Technologies",
       "Networking",
@@ -95,7 +95,7 @@ export const events: EventItem[] = [
 ];
 
 export const eventsIntro = {
-  title: "Events & Professional Activity",
+  title: "Events and Professional Activity",
   subtitle:
     "Conferences, workshops, seminars, meetups, and professional activities connected to my research and engineering journey.",
 };

@@ -9,7 +9,7 @@ export type ResearchArea = {
 export const researchFocus: ResearchArea[] = [
   {
     index: "01",
-    title: "Artificial Intelligence & Machine Learning",
+    title: "Artificial Intelligence and Machine Learning",
     description:
       "Deep learning, neural networks, CNN, LSTM, Transformers, reinforcement learning and computer vision, applied to robotics and signal decoding.",
     topics: ["Deep Learning", "CNN", "LSTM", "Transformers", "Reinforcement Learning"],
@@ -130,7 +130,7 @@ export type Capability = {
 // skill set takes that slot here instead, per site content decisions.
 export const capabilityGrid: Capability[] = [
   {
-    title: "AI & Machine Learning",
+    title: "AI and Machine Learning",
     description:
       "Deep learning and classical ML applied to signal decoding and robotic decision-making.",
     technologies: ["PyTorch", "TensorFlow", "CNN"],
@@ -162,7 +162,7 @@ export const capabilityGrid: Capability[] = [
     href: "/research#engineering-capabilities",
   },
   {
-    title: "Computer Vision & Perception",
+    title: "Computer Vision and Perception",
     description:
       "Object detection, image classification and camera-based perception feeding robotic decision-making.",
     technologies: ["OpenCV", "Object Detection", "Image Classification"],

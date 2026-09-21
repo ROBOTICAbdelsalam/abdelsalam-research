@@ -3,7 +3,7 @@ export const aboutIntro = {
     "AI & Robotics Engineer with 8+ years in industrial robotics, automation and control, now completing an M.Sc. in Robotics and Automation with a research focus on adaptive brain-computer interfaces.",
   // Condensed from the CV's Professional Summary, preserving its factual
   // meaning — see src/data/experience.ts and education.ts for the full detail.
-  bio: "I'm an AI & Robotics Engineer with 8+ years delivering industrial robotics, automation and control systems — including commissioning automation, robotic inspection and instrumentation & control systems on Egypt's 14.4 GW combined-cycle Megaproject, the largest combined-cycle programme ever built. I later worked across Egypt and the Netherlands deploying AI-driven industrial robots, collaborative robots and autonomous mobile robots for manufacturing and logistics clients, reducing operating costs by 30% and raising throughput by 25%. I'm now completing an M.Sc. in Robotics and Automation at JAMK University of Applied Sciences in Finland, specialized in artificial intelligence for robotics. My thesis engineers a hybrid adaptive Brain-Computer Interface that decodes real-time EEG with deep learning to control industrial manipulators and medical assistive devices.",
+  bio: "I'm an AI & Robotics Engineer with 8+ years delivering industrial robotics, automation and control systems — including commissioning automation, robotic inspection and instrumentation and control systems on Egypt's 14.4 GW combined-cycle Megaproject, the largest combined-cycle programme ever built. I later worked across Egypt and the Netherlands deploying AI-driven industrial robots, collaborative robots and autonomous mobile robots for manufacturing and logistics clients, reducing operating costs by 30% and raising throughput by 25%. I'm now completing an M.Sc. in Robotics and Automation at JAMK University of Applied Sciences in Finland, specialized in artificial intelligence for robotics. My thesis engineers a hybrid adaptive Brain-Computer Interface that decodes real-time EEG with deep learning to control industrial manipulators and medical assistive devices.",
 };
 
 // The professional trajectory this site is built around — not a list of
@@ -11,10 +11,10 @@ export const aboutIntro = {
 export const careerTrajectory: string[] = [
   "Industrial Automation",
   "Robotics",
-  "AI & Machine Learning",
+  "AI and Machine Learning",
   "Autonomous Systems",
   "Brain-Computer Interface Research",
-  "AI Agents & Intelligent Automation",
+  "AI Agents and Intelligent Automation",
 ];
 
 export const researchInterests: string[] = [

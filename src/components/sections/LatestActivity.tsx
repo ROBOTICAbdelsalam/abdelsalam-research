@@ -17,7 +17,7 @@ export function LatestActivity() {
       <Container>
         <SectionHeading
           eyebrow="07 — Latest Activity"
-          title="Events & Professional Activity"
+          title="Events and Professional Activity"
           subtitle="Recent conferences, workshops and professional engagements."
         />
         <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">

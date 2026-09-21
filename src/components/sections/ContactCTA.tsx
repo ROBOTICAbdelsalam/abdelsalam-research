@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 
 const focus = [
   "Research collaboration",
-  "Robotics & automation roles",
+  "Robotics and automation roles",
   "AI / Robotics projects",
   "Technical collaboration",
 ];

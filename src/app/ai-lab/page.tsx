@@ -79,7 +79,7 @@ export default function AiLabPage() {
         <Container>
           <SectionHeading
             eyebrow="Operations Console"
-            title="Lab Operations & Intelligence"
+            title="Lab Operations and Intelligence"
             subtitle="What's happening in the lab, what has happened, and how it all connects — a session-level view over the same agent, task and activity state driving the 3D scene above. A local observability layer, not real monitoring infrastructure."
           />
           <div className="mt-14 flex flex-col gap-4">
@@ -124,7 +124,7 @@ export default function AiLabPage() {
         <Container>
           <SectionHeading
             eyebrow="Project Workspace"
-            title="AI Research & Engineering Workspace"
+            title="AI Research and Engineering Workspace"
             subtitle="Where research ideas become engineering work — the site's real projects, connected to the same knowledge, research and agents above. A local workspace, not a live engineering environment: running a simulation task never builds, deploys or executes anything."
           />
           <div className="mt-14">

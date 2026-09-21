@@ -115,7 +115,7 @@ export default function AboutPage() {
         <Container>
           <SectionHeading
             eyebrow="Technology Stack"
-            title="Tools & Technologies"
+            title="Tools and Technologies"
             subtitle="Listed as skills and areas of active interest, not claims of professional mastery."
           />
           <div className="mt-14">

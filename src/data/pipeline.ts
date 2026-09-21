@@ -12,7 +12,7 @@ export type PipelineStage = {
 // conceptual/positioning; not a claim about any specific project's
 // implementation.
 export const systemPipeline: PipelineStage[] = [
-  { title: "Sensors", description: "EEG, industrial & robotic sensing", tone: "trace", iconKey: "antenna" },
+  { title: "Sensors", description: "EEG, industrial and robotic sensing", tone: "trace", iconKey: "antenna" },
   { title: "Data", description: "Acquisition, pipelines, processing", tone: "violet", iconKey: "database" },
   { title: "AI / ML", description: "Models, inference, decoding", tone: "accent", iconKey: "cpu" },
   { title: "Decision", description: "Planning, adaptive control logic", tone: "accent", iconKey: "split" },
