@@ -3,7 +3,7 @@ import { GithubIcon, LinkedinIcon } from "@/components/icons/BrandIcons";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { HeroVisual } from "./HeroVisual";
+import { HeroScene } from "@/components/3d/HeroScene";
 import { HeroCircuitEdge } from "./HeroCircuitEdge";
 import { siteConfig, heroCredentials } from "@/data/site";
 
@@ -27,8 +27,9 @@ export function Hero() {
         <HeroCircuitEdge flip />
       </div>
       <Container className="relative py-20 md:py-28">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-12">
-          <div>
+        <div className="relative grid grid-cols-1 gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-12">
+          {/* Copy sits above the 3D scene, which bleeds in behind it on lg+. */}
+          <div className="relative z-10">
             <Reveal>
               <p className="font-mono text-xs tracking-[0.2em] text-accent uppercase mb-6">
                 {siteConfig.positioning}
@@ -98,12 +99,10 @@ export function Hero() {
             )}
           </div>
 
-          <Reveal delay={0.15} className="lg:pl-6">
-            <HeroVisual />
-          </Reveal>
+          <HeroScene />
         </div>
 
-        <Reveal delay={0.35} className="mt-20 md:mt-24">
+        <Reveal delay={0.35} className="relative z-10 mt-20 md:mt-24">
           <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {heroCredentials.map((item, index) => {
               const Icon = credentialIcons[index];

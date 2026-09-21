@@ -83,10 +83,16 @@ export function Footer() {
         </div>
       </Container>
 
-      <Container className="border-t border-border py-6">
+      <Container className="border-t border-border py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted">
           © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
         </p>
+        <Link
+          href="/credits"
+          className="text-xs text-muted hover:text-foreground transition-colors"
+        >
+          3D Asset Credits
+        </Link>
       </Container>
     </footer>
   );
