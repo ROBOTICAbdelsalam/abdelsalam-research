@@ -1,0 +1,124 @@
+"use client";
+
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { useSceneQuality } from "./sceneQuality";
+
+// A physical research-monitor prop: dark graphite bezel + glass screen
+// driven by a canvas texture, redrawn on a throttled interval rather than
+// every frame (same imperative-canvas technique as
+// src/lib/ai-lab/canvasTextures.ts, generalized into a reusable primitive
+// so every station in this lab can carry its own live readout cheaply).
+//
+// Two independent reasons trigger a redraw:
+//  - a timer, for continuously time-animated content (waveforms) — only
+//    runs when `intervalMs > 0`;
+//  - `draw`'s identity changing, for state-driven content (confidence
+//    bars, key/value readouts) that only needs to repaint when the
+//    station's actual data changes, not on a clock. This also covers the
+//    very first paint. `frozen` (reduced motion) suppresses the timer but
+//    never suppresses a real data change.
+
+export type ScreenDraw = (ctx: CanvasRenderingContext2D, w: number, h: number, elapsed: number) => void;
+
+function markTextureDirty(texture: THREE.CanvasTexture) {
+  texture.needsUpdate = true;
+}
+
+export type ScreenProps = {
+  /** World-space panel size [width, height]. */
+  size: readonly [number, number];
+  position?: readonly [number, number, number];
+  rotation?: readonly [number, number, number];
+  draw: ScreenDraw;
+  /** Canvas pixel resolution. Kept modest — these are readouts, not photos. */
+  resolution?: readonly [number, number];
+  /** Timer redraw throttle in ms. <= 0 means "only redraw when `draw` changes". */
+  intervalMs?: number;
+  /** Suppresses the timer (reduced motion) — data-driven redraws still happen. */
+  frozen?: boolean;
+  bezelColor?: string;
+  glow?: string;
+};
+
+export function Screen({
+  size,
+  position,
+  rotation,
+  draw,
+  resolution = [512, 320],
+  intervalMs = 140,
+  frozen = false,
+  bezelColor = "#1a1e26",
+  glow = "#2a5cff",
+}: ScreenProps) {
+  const canvas = useMemo(() => {
+    const el = document.createElement("canvas");
+    el.width = resolution[0];
+    el.height = resolution[1];
+    return el;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- resolution is effectively static per screen instance
+  }, []);
+  const ctx = useMemo(() => canvas.getContext("2d"), [canvas]);
+  const texture = useMemo(() => {
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 2;
+    return tex;
+  }, [canvas]);
+
+  const { mobile } = useSceneQuality();
+  const effectiveInterval = intervalMs > 0 && mobile ? intervalMs * 1.8 : intervalMs;
+
+  const lastDrawFn = useRef<ScreenDraw | null>(null);
+  const accum = useRef(0);
+  const elapsed = useRef(0);
+
+  useFrame((_, delta) => {
+    if (!ctx) return;
+    elapsed.current += delta;
+    const fnChanged = lastDrawFn.current !== draw;
+    accum.current += delta * 1000;
+    const dueByTimer = !frozen && effectiveInterval > 0 && accum.current >= effectiveInterval;
+    if (!fnChanged && !dueByTimer) return;
+    accum.current = 0;
+    lastDrawFn.current = draw;
+    draw(ctx, canvas.width, canvas.height, elapsed.current);
+    markTextureDirty(texture);
+  });
+
+  useEffect(
+    () => () => {
+      texture.dispose();
+    },
+    [texture],
+  );
+
+  const [w, h] = size;
+  const bezel = Math.min(w, h) * 0.045;
+
+  return (
+    <group position={position as [number, number, number]} rotation={rotation as [number, number, number]}>
+      <mesh>
+        <boxGeometry args={[w + bezel * 2, h + bezel * 2, bezel]} />
+        <meshStandardMaterial color={bezelColor} roughness={0.55} metalness={0.35} />
+      </mesh>
+      {/* Content faces local -Z, matching the site's "-Z is forward" convention
+          (see layout.ts `facing()`) — every station rotates its desk group
+          to aim -Z at the point it should face. Double-sided on top of that:
+          with free orbit/pan, a visitor can end up on either side of a
+          desk, and a monitor that goes black from "behind" reads as broken,
+          not as physically accurate — legible from both sides is the more
+          honest choice for an explorable scene. */}
+      <mesh position={[0, 0, -(bezel / 2 + 0.002)]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[w, h]} />
+        <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0, -(bezel / 2 + 0.001)]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[w + bezel * 0.35, h + bezel * 0.35]} />
+        <meshBasicMaterial color={glow} transparent opacity={0.05} toneMapped={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}

@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, FlaskConical, ArrowLeft } from "lucide-react";
 import { GithubIcon } from "@/components/icons/BrandIcons";
+import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Reveal } from "@/components/ui/Reveal";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { ProjectMediaGrid } from "@/components/sections/ProjectMediaGrid";
+import { BCIDigitalTwin } from "@/components/research/bci-3d/BCIDigitalTwin";
 import { projects } from "@/data/projects";
 
 type Params = { slug: string };
@@ -65,9 +67,11 @@ export default async function ProjectPage({
 
   // Numbered sequentially so the optional Media section never leaves a gap
   // in the numbering when a project has no media yet.
+  const hasInteractiveExperiment = project.slug === "hybrid-adaptive-bci";
   let sectionIndex = 2; // Problem = 1, Build = 2
   const mediaIndex = hasMedia ? ++sectionIndex : undefined;
   const technologyIndex = ++sectionIndex;
+  const experimentIndex = hasInteractiveExperiment ? ++sectionIndex : undefined;
   const statusIndex = ++sectionIndex;
   const linksIndex = ++sectionIndex;
 
@@ -112,8 +116,21 @@ export default async function ProjectPage({
               ))}
             </div>
           </Reveal>
+        </Container>
+      </section>
 
-          <Reveal delay={0.12} className="mt-12">
+      {hasInteractiveExperiment && experimentIndex && (
+        <section className="py-20 md:py-24 border-t border-border">
+          <Container>
+            <SectionLabel index={experimentIndex} title="Interactive 3D Experiment" />
+            <BCIDigitalTwin />
+          </Container>
+        </section>
+      )}
+
+      <section className={cn("py-20 md:py-24", hasInteractiveExperiment && "border-t border-border")}>
+        <Container className="max-w-3xl">
+          <Reveal delay={0.12}>
             <SectionLabel index={statusIndex} title="Status" />
             {project.status ? (
               <Badge tone="accent">{project.status}</Badge>
