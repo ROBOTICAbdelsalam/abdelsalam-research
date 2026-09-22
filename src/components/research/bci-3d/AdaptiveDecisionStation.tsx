@@ -62,8 +62,8 @@ export function AdaptiveDecisionStation() {
     <StationShell id="adaptive-decision" position={ADAPTIVE_DECISION_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
       <group rotation-y={YAW}>
         <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.38]} position={[-0.35, 1.12, 0]} draw={drawGate} intervalMs={140} frozen={reducedMotion} glow={PANEL.accent} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawAdaptive} intervalMs={0} frozen={reducedMotion} glow={PANEL.amber} />
+        <Screen size={[0.56, 0.38]} position={[-0.35, 1.12, 0]} draw={drawGate} intervalMs={140} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
+        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawAdaptive} intervalMs={0} frozen={reducedMotion} glow={PANEL.amber} deskY={0.78} />
       </group>
       <Nameplate text="Adaptive Decision" sub="Confidence gate · cold start" position={[0, 1.85, 1.3]} />
     </StationShell>

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
+import { mulberry32 } from "@/components/3d/random";
 import { ROOM } from "./layout";
 
 // The physical shell: dark graphite floor and walls, a few overhead trusses
@@ -12,6 +13,42 @@ import { ROOM } from "./layout";
 
 const FLOOR_COLOR = "#0d0f13";
 const WALL_COLOR = "#12151b";
+const RACK_COLOR = "#14171d";
+
+// A tall equipment rack — server/amplifier-style hardware standing against
+// a side wall purely for background/midground depth (section 4's "the
+// camera should clearly perceive foreground, midground, background"). No
+// interaction, no per-frame cost: static geometry and static LED colors.
+function EquipmentRack({ position, rotationY = 0 }: { position: readonly [number, number, number]; rotationY?: number }) {
+  const leds = useMemo(() => {
+    const random = mulberry32(Math.round((position[0] + position[2]) * 97));
+    return Array.from({ length: 6 }, () => (random() > 0.72 ? "#e0a23d" : random() > 0.5 ? "#5cf2a8" : "#232a36"));
+  }, [position]);
+
+  return (
+    <group position={position as unknown as [number, number, number]} rotation-y={rotationY}>
+      <mesh position-y={0.95} castShadow receiveShadow>
+        <boxGeometry args={[0.56, 1.9, 0.5]} />
+        <meshStandardMaterial color={RACK_COLOR} roughness={0.5} metalness={0.45} />
+      </mesh>
+      <mesh position={[0, 0.95, 0.252]}>
+        <boxGeometry args={[0.5, 1.82, 0.006]} />
+        <meshStandardMaterial color="#0e1014" roughness={0.6} metalness={0.3} />
+      </mesh>
+      {leds.map((color, i) => (
+        <mesh key={i} position={[-0.19 + (i % 2) * 0.38, 1.55 - Math.floor(i / 2) * 0.16, 0.256]}>
+          <boxGeometry args={[0.03, 0.012, 0.004]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={color === "#232a36" ? 0 : 1.2} toneMapped={false} />
+        </mesh>
+      ))}
+      {/* Brushed-aluminum kick strip at the base, tying it to the floor. */}
+      <mesh position-y={0.03}>
+        <boxGeometry args={[0.58, 0.06, 0.52]} />
+        <meshStandardMaterial color="#3a4150" roughness={0.35} metalness={0.75} />
+      </mesh>
+    </group>
+  );
+}
 
 export function LabEnvironment() {
   const floorGeometry = useMemo(
@@ -30,7 +67,10 @@ export function LabEnvironment() {
         position={[0, 0, ROOM.centerZ]}
         receiveShadow
       >
-        <meshStandardMaterial color={FLOOR_COLOR} roughness={0.32} metalness={0.5} />
+        {/* Slightly reflective, not mirror-like (section 21) — enough
+            metalness for the synthetic IBL to leave a soft sheen, without
+            the floor reading as wet glass. */}
+        <meshStandardMaterial color={FLOOR_COLOR} roughness={0.46} metalness={0.22} />
       </mesh>
       {/* Faint floor seams, on a subtle grid — reads as tile, not a mirror. */}
       <gridHelper
@@ -61,6 +101,12 @@ export function LabEnvironment() {
         </mesh>
       ))}
 
+      {/* Equipment racks against the side walls — background/midground
+          hardware giving the room real depth instead of bare walls. */}
+      <EquipmentRack position={[-7.7, 0, -7.5]} rotationY={Math.PI / 2} />
+      <EquipmentRack position={[7.7, 0, -1]} rotationY={-Math.PI / 2} />
+      <EquipmentRack position={[-7.7, 0, 3.6]} rotationY={Math.PI / 2} />
+
       {/* Overhead trusses with practical strip lights. */}
       {trussZs.map((z) =>
         trussXs.map((x) => (
@@ -83,14 +129,34 @@ export function LabEnvironment() {
 export function LabLighting() {
   return (
     <>
-      <ambientLight intensity={0.42} color="#5878ff" />
-      <hemisphereLight args={["#4a6cff", "#05060a", 0.5]} />
+      {/* Ambient/hemisphere fill kept a muted, mostly neutral cool gray —
+          the blue/cyan accents (truss strips, lightformers, the amber
+          kicker's contrast partner) do the "scientific lab" color work;
+          the base fill deliberately isn't saturated blue (section 20). */}
+      <ambientLight intensity={0.32} color="#3d4a66" />
+      <hemisphereLight args={["#3c5170", "#0a0b0d", 0.42]} />
       {/* Soft overhead practicals along the pipeline spine. */}
       {[-9, -3, 3, 9].map((z) => (
         <pointLight key={z} position={[0, ROOM.wallHeight - 0.6, z]} color="#dce6ff" intensity={75} distance={16} decay={2} />
       ))}
-      {/* Cool key light from the front, gentle amber kicker from the back. */}
-      <directionalLight position={[8, 9, 10]} intensity={1.1} color="#a9c3ff" />
+      {/* Cool key light from the front — the room's one shadow-casting
+          light, sized to the pipeline spine so grounded objects (desks,
+          the participant, the hand) read with real contact shadows instead
+          of floating. Gentle amber kicker from the back for warmth. */}
+      <directionalLight
+        position={[8, 9, 10]}
+        intensity={1.1}
+        color="#a9c3ff"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-11}
+        shadow-camera-right={11}
+        shadow-camera-top={14}
+        shadow-camera-bottom={-14}
+        shadow-camera-near={1}
+        shadow-camera-far={40}
+        shadow-bias={-0.0015}
+      />
       <pointLight position={[-4, 3, -12]} color="#e0a23d" intensity={35} distance={12} decay={2} />
 
       {/* A small, cheap synthetic environment (one baked frame, no network

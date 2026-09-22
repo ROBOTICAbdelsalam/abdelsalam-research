@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import type { Group } from "three";
 import { GlowRing } from "@/components/3d/GlowRing";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -43,22 +44,41 @@ export function BCICore() {
         </mesh>
         <group ref={core}>
           <mesh>
-            <icosahedronGeometry args={[0.22, 0]} />
-            <meshStandardMaterial
+            <icosahedronGeometry args={[0.22, 1]} />
+            <meshPhysicalMaterial
               color="#0e1420"
               emissive="#5b9dff"
               emissiveIntensity={running ? 0.75 : 0.4}
-              roughness={0.25}
-              metalness={0.4}
+              roughness={0.2}
+              metalness={0.15}
+              transmission={0.35}
+              thickness={0.3}
+              ior={1.4}
               transparent
-              opacity={0.92}
+              opacity={0.95}
             />
           </mesh>
           <mesh scale={1.03}>
-            <icosahedronGeometry args={[0.22, 0]} />
+            <icosahedronGeometry args={[0.22, 1]} />
             <meshBasicMaterial color="#8fc4ff" wireframe transparent opacity={0.5} toneMapped={false} />
           </mesh>
         </group>
+        {/* A thin glass display shell — grounds the geometry as a physical
+            visualization installation on the pedestal rather than a free-
+            floating effect. */}
+        <mesh>
+          <cylinderGeometry args={[0.36, 0.36, 0.5, 32, 1, true]} />
+          <meshPhysicalMaterial
+            color="#0a1018"
+            transmission={0.85}
+            roughness={0.08}
+            thickness={0.05}
+            ior={1.45}
+            transparent
+            opacity={0.22}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
         {RINGS.map((ring, i) => (
           <GlowRing
             key={i}

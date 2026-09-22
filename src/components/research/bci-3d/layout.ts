@@ -1,3 +1,5 @@
+import type { PipelineStageId } from "@/data/bci-experiment";
+
 // Spatial layout for the BCI digital-twin laboratory. One shared config so
 // positions aren't scattered across station components — mirrors the
 // convention in src/lib/ai-lab/layout.ts. Units are meters-ish, Y up, floor
@@ -70,19 +72,48 @@ export const CAMERA_MODES: readonly { id: CameraMode; label: string }[] = [
 export type CameraShot = { position: Vec3; target: Vec3 };
 
 // Keeps enough surrounding context visible per station — never a tight
-// crop on a single desk.
+// crop on a single desk. Heights are deliberately kept closer to standing
+// eye level (~1.6-2m of clearance above the floor rather than up near the
+// ceiling) so the default read is "a person standing in the lab", not an
+// overhead strategy-game camera — see the realism pass's camera notes.
 export const CAMERA_SHOTS: Record<CameraMode, CameraShot> = {
-  overview: { position: [7.5, 5.4, 10.8], target: [0, 1.3, -2] },
-  eeg: { position: [2.6, 2.9, -6.3], target: [-1.6, 1.55, -10.6] },
-  ai: { position: [7.4, 5.1, -2.6], target: [0, 1.7, -5.6] },
-  adaptive: { position: [6.6, 3.3, -1.1], target: [3.0, 1.35, -3.5] },
-  ros2: { position: [-6.6, 3.4, 7.3], target: [-3.2, 1.35, 5.2] },
-  robot: { position: [4.6, 3.4, 11.8], target: [0, 1.7, 9.4] },
+  overview: { position: [6.6, 4.1, 9.4], target: [0, 1.35, -1.6] },
+  eeg: { position: [2.6, 2.7, -6.3], target: [-1.6, 1.5, -10.6] },
+  ai: { position: [6.8, 3.9, -2.2], target: [0, 1.65, -5.6] },
+  adaptive: { position: [6.2, 3.1, -1.1], target: [3.0, 1.35, -3.5] },
+  ros2: { position: [-6.4, 3.2, 7.3], target: [-3.2, 1.35, 5.2] },
+  robot: { position: [4.4, 3.2, 11.8], target: [0, 1.6, 9.4] },
+};
+
+// Which camera preset the guided tour switches to while a given pipeline
+// stage is active (see section 19 — start drives the camera through the
+// stations in pipeline order; the six presets group the nine stages by
+// physical neighborhood, same grouping BCIInfoPanel already uses per
+// station).
+export const STAGE_CAMERA: Record<PipelineStageId, CameraMode> = {
+  eeg: "eeg",
+  preprocessing: "ai",
+  features: "ai",
+  "cnn-lstm": "ai",
+  "adaptive-gate": "adaptive",
+  ros2: "ros2",
+  moveit2: "ros2",
+  gazebo: "robot",
+  robot: "robot",
 };
 
 export const CAMERA_LIMITS = {
-  minDistance: 5.5,
-  maxDistance: 21,
+  minDistance: 2.4,
+  // Comfortably above the widest preset's own baseline radius (overview,
+  // ~13.1m) so settling into free orbit right after a guided transition
+  // never causes a sudden re-clamp jump, while still bounding how far a
+  // user can scroll-zoom out. This isn't the room's real safety net — an
+  // irregular, off-center room means a single azimuth-independent distance
+  // can't guarantee every orbit angle stays inside the walls. The actual
+  // guarantee is the position/target clamp in BCICameraRig, which keeps the
+  // camera and its orbit target inside the room outright regardless of
+  // zoom or pan; this maxDistance just keeps ordinary zoom-out reasonable.
+  maxDistance: 16,
   minPolarAngle: Math.PI * 0.08,
   maxPolarAngle: Math.PI * 0.49,
 };

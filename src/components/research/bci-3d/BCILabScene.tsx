@@ -44,7 +44,7 @@ function Clock({ animate }: { animate: boolean }) {
 function EmergencyTint() {
   const { phase } = useBciExperiment();
   const stopped = phase === "EMERGENCY_STOP";
-  return stopped ? <pointLight position={[0, 3, 2]} color="#e0575a" intensity={6} distance={16} decay={2} /> : null;
+  return stopped ? <pointLight position={[0, 3, 2]} color="#e0575a" intensity={42} distance={16} decay={2} /> : null;
 }
 
 export function BCILabScene({ active, mobile, dprMax, onReady }: BCILabSceneProps) {
@@ -61,7 +61,7 @@ export function BCILabScene({ active, mobile, dprMax, onReady }: BCILabSceneProp
       dpr={[1, Math.max(1, dprMax * dprFactor)]}
       frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, powerPreference: "high-performance" }}
-      camera={{ position: CAMERA_SHOTS.overview.position as unknown as [number, number, number], fov: 42, near: 0.1, far: 60 }}
+      camera={{ position: CAMERA_SHOTS.overview.position as unknown as [number, number, number], fov: 47, near: 0.1, far: 60 }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x05070a, 1);
         requestAnimationFrame(onReady);

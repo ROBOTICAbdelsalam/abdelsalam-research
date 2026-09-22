@@ -49,8 +49,8 @@ export function CNNLSTMStation() {
     <StationShell id="cnn-lstm" position={CNN_LSTM_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
       <group rotation-y={YAW}>
         <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.34]} position={[-0.35, 1.1, 0]} draw={drawChain} intervalMs={90} frozen={reducedMotion} glow={PANEL.accent} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawBars} intervalMs={200} frozen={reducedMotion} glow={PANEL.cyan} />
+        <Screen size={[0.56, 0.34]} position={[-0.35, 1.1, 0]} draw={drawChain} intervalMs={90} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
+        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawBars} intervalMs={200} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
       </group>
       <Nameplate text="CNN-LSTM" sub="Motor-imagery classification" position={[0, 1.85, 1.3]} />
     </StationShell>

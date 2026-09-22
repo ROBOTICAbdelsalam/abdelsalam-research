@@ -53,9 +53,9 @@ export function SignalProcessingStation() {
     <StationShell id="signal-processing" position={SIGNAL_PROCESSING_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
       <group rotation-y={YAW}>
         <Desk width={1.7} depth={0.62} />
-        <Screen size={[0.5, 0.34]} position={[-0.58, 1.1, 0]} draw={drawRaw} intervalMs={100} frozen={reducedMotion} glow={PANEL.accent} />
-        <Screen size={[0.5, 0.34]} position={[0, 1.14, 0]} draw={drawFiltered} intervalMs={100} frozen={reducedMotion} glow={PANEL.cyan} />
-        <Screen size={[0.5, 0.34]} position={[0.58, 1.1, 0]} draw={drawIcaEpoch} intervalMs={220} frozen={reducedMotion} glow={PANEL.amber} />
+        <Screen size={[0.5, 0.34]} position={[-0.58, 1.1, 0]} draw={drawRaw} intervalMs={100} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
+        <Screen size={[0.5, 0.34]} position={[0, 1.14, 0]} draw={drawFiltered} intervalMs={100} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
+        <Screen size={[0.5, 0.34]} position={[0.58, 1.1, 0]} draw={drawIcaEpoch} intervalMs={220} frozen={reducedMotion} glow={PANEL.amber} deskY={0.78} />
       </group>
       <Nameplate text="Signal Processing" sub="Filter · ICA · epoching" position={[0, 1.85, 1.3]} />
     </StationShell>

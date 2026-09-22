@@ -20,7 +20,7 @@ import {
   type ExperimentTick,
   type SystemStatusRow,
 } from "./state";
-import type { CameraMode, StationId } from "./layout";
+import { STAGE_CAMERA, type CameraMode, type StationId } from "./layout";
 
 // Feature-local state (mirrors the AgentLabProvider pattern already used by
 // the AI Lab — a React context scoped to this one experience, not a second
@@ -113,7 +113,20 @@ export function BCIExperimentProvider({ children }: { children: ReactNode }) {
     tickStartedAtRef.current = performance.now();
     tickRemainingRef.current = null;
 
-    setState((prev) => ({ ...prev, phase: tick.phase, stage: tick.stage, statusText: tick.status }));
+    // Guided camera (section 19): each tick's stage drives the camera to
+    // that stage's preset, so starting a run tours the room in pipeline
+    // order — Lab Overview → EEG → AI → Adaptive → ROS2 → Robot — rather
+    // than leaving the visitor parked wherever they last looked. Free
+    // orbit/pan/zoom still works at every step; once the run ends the
+    // camera simply stays put ("explore lab"), and any preset pill remains
+    // clickable throughout.
+    setState((prev) => ({
+      ...prev,
+      phase: tick.phase,
+      stage: tick.stage,
+      statusText: tick.status,
+      cameraMode: STAGE_CAMERA[tick.stage],
+    }));
 
     timerRef.current = setTimeout(() => {
       tickIndexRef.current += 1;

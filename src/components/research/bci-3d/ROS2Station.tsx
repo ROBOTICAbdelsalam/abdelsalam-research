@@ -76,8 +76,8 @@ export function ROS2Station() {
     <StationShell id="ros2" position={ROS2_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
       <group rotation-y={YAW}>
         <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.36]} position={[-0.35, 1.11, 0]} draw={drawChain} intervalMs={110} frozen={reducedMotion} glow={PANEL.accent} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawLog} intervalMs={0} frozen={reducedMotion} glow={PANEL.cyan} />
+        <Screen size={[0.56, 0.36]} position={[-0.35, 1.11, 0]} draw={drawChain} intervalMs={110} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
+        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawLog} intervalMs={0} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
       </group>
       <Nameplate text="ROS 2 Control" sub={`${ROS_STACK.distro} · ${ROS_STACK.controlStack}`} position={[0, 1.85, 1.3]} />
     </StationShell>

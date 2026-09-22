@@ -26,6 +26,8 @@ import { StationShell } from "./StationShell";
 const METAL = { color: "#c3ccdb", metalness: 0.75, roughness: 0.32 } as const;
 const JOINT = { color: "#20242e", metalness: 0.7, roughness: 0.45 } as const;
 const POLYMER = { color: "#171a21", metalness: 0.2, roughness: 0.7 } as const;
+const RUBBER = { color: "#101114", metalness: 0.05, roughness: 0.88 } as const;
+const TENDON = { color: "#0b0c0f", metalness: 0.15, roughness: 0.6 } as const;
 
 type FingerSpec = {
   id: "index" | "middle" | "ring" | "pinky";
@@ -73,6 +75,7 @@ function Segment({
   const length = lengths[depth];
   if (length === undefined) return null;
   const radius = PHALANX_RADIUS * (1 - depth * 0.16);
+  const isTip = depth === lengths.length - 1;
   return (
     <group
       ref={(g) => {
@@ -83,12 +86,37 @@ function Segment({
         <capsuleGeometry args={[radius, Math.max(length - radius * 2, 0.004), 4, 10]} />
         <meshStandardMaterial {...(depth === 1 ? POLYMER : METAL)} />
       </mesh>
+      {/* Dorsal tendon line — a thin cable along the back of the segment,
+          suggesting real actuation routing rather than a bare mechanical
+          skeleton. Moves with the joint it's attached to; no separate
+          animation. */}
+      <mesh position={[0, length / 2, -radius * 1.3]}>
+        <cylinderGeometry args={[radius * 0.2, radius * 0.2, length * 0.8, 6]} />
+        <meshStandardMaterial {...TENDON} />
+      </mesh>
+      {depth === 0 && (
+        // Knuckle actuator housing at the MCP joint — every finger bends
+        // from a visible mechanical bulge, not a bare hinge.
+        <mesh position-y={radius * 0.1} castShadow>
+          <boxGeometry args={[radius * 2.7, radius * 1.7, radius * 2.3]} />
+          <meshStandardMaterial {...JOINT} />
+        </mesh>
+      )}
       <mesh position-y={0}>
         <sphereGeometry args={[radius * 1.12, 10, 8]} />
         <meshStandardMaterial {...JOINT} />
       </mesh>
       <group position-y={length}>
-        <Segment lengths={lengths} depth={depth + 1} refs={refs} refBase={refBase} />
+        {isTip ? (
+          // Fingertip pad — matte dark rubber, not bare metal, where the
+          // hand would actually contact an object.
+          <mesh position-y={radius * 0.55} castShadow>
+            <sphereGeometry args={[radius * 1.08, 10, 8]} />
+            <meshStandardMaterial {...RUBBER} />
+          </mesh>
+        ) : (
+          <Segment lengths={lengths} depth={depth + 1} refs={refs} refBase={refBase} />
+        )}
       </group>
     </group>
   );
@@ -103,6 +131,14 @@ function Thumb({ refs }: { refs: React.MutableRefObject<(Group | null)[]> }) {
           <capsuleGeometry args={[PHALANX_RADIUS * 1.15, lengths[0] - PHALANX_RADIUS * 2, 4, 10]} />
           <meshStandardMaterial {...METAL} />
         </mesh>
+        <mesh position={[0, lengths[0] / 2, -PHALANX_RADIUS * 1.5]}>
+          <cylinderGeometry args={[PHALANX_RADIUS * 0.22, PHALANX_RADIUS * 0.22, lengths[0] * 0.78, 6]} />
+          <meshStandardMaterial {...TENDON} />
+        </mesh>
+        <mesh position-y={-PHALANX_RADIUS * 0.15} castShadow>
+          <boxGeometry args={[PHALANX_RADIUS * 3, PHALANX_RADIUS * 2, PHALANX_RADIUS * 2.6]} />
+          <meshStandardMaterial {...JOINT} />
+        </mesh>
         <mesh>
           <sphereGeometry args={[PHALANX_RADIUS * 1.3, 10, 8]} />
           <meshStandardMaterial {...JOINT} />
@@ -115,6 +151,10 @@ function Thumb({ refs }: { refs: React.MutableRefObject<(Group | null)[]> }) {
           <mesh>
             <sphereGeometry args={[PHALANX_RADIUS * 1.05, 10, 8]} />
             <meshStandardMaterial {...JOINT} />
+          </mesh>
+          <mesh position-y={lengths[1] + PHALANX_RADIUS * 0.5} castShadow>
+            <sphereGeometry args={[PHALANX_RADIUS * 1.02, 10, 8]} />
+            <meshStandardMaterial {...RUBBER} />
           </mesh>
         </group>
       </group>
@@ -183,26 +223,57 @@ export function RoboticHand() {
 
   return (
     <StationShell id="hand" position={HAND_POSITION} radius={1.9} active={active} tint="#2dd4c8">
-      {/* Simulation pedestal: raised platform, ground-grid tile, two graspable primitives. */}
+      {/* Simulation workcell: raised mounting platform, a workbench top,
+          ground-grid tile, and a small tray of graspable parts — a real
+          bench the hand is bolted to, not a bare disc. */}
       <mesh position-y={0.42} castShadow receiveShadow>
         <cylinderGeometry args={[0.62, 0.68, 0.84, 28]} />
         <meshStandardMaterial color="#171b22" roughness={0.55} metalness={0.4} />
       </mesh>
-      <gridHelper args={[1.05, 8, "#2dd4c8", "#193a3a"]} position={[0, 0.845, 0]} />
-      <mesh position={[-0.36, 0.9, 0.22]} castShadow>
-        <boxGeometry args={[0.09, 0.09, 0.09]} />
+      <mesh position-y={0.845} castShadow receiveShadow>
+        <cylinderGeometry args={[0.66, 0.66, 0.03, 32]} />
+        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.55} />
+      </mesh>
+      <gridHelper args={[1.05, 8, "#2dd4c8", "#193a3a"]} position={[0, 0.862, 0]} />
+      {/* Small parts tray: a hex-bolt-like part and a chamfered block. */}
+      <mesh position={[-0.38, 0.885, 0.24]} castShadow>
+        <boxGeometry args={[0.1, 0.07, 0.1]} />
         <meshStandardMaterial color="#3a4150" roughness={0.5} metalness={0.5} />
       </mesh>
-      <mesh position={[0.34, 0.87, -0.18]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 0.11, 16]} />
-        <meshStandardMaterial color="#4a5160" roughness={0.4} metalness={0.6} />
+      <mesh position={[-0.38, 0.925, 0.24]} castShadow>
+        <boxGeometry args={[0.07, 0.012, 0.07]} />
+        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.6} />
+      </mesh>
+      <mesh position={[0.36, 0.895, -0.2]} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, 0.13, 6]} />
+        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.65} />
+      </mesh>
+      <mesh position={[0.36, 0.965, -0.2]} castShadow>
+        <cylinderGeometry args={[0.018, 0.018, 0.05, 8]} />
+        <meshStandardMaterial color="#5a6272" roughness={0.3} metalness={0.7} />
       </mesh>
 
-      {/* Forearm + wrist, fixed to the pedestal. */}
+      {/* Forearm + wrist, fixed to the pedestal: a segmented forearm, a
+          motor housing with vent slats, and a mounting flange at the
+          wrist joint — actuator hardware, not a bare rod. */}
       <group position={[0, 0.86, 0]}>
-        <mesh position={[0, 0.14, -0.22]} rotation={[0.5, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.052, 0.06, 0.46, 20]} />
+        <mesh position={[0, 0.06, -0.3]} rotation={[0.5, 0, 0]} castShadow>
+          <boxGeometry args={[0.1, 0.16, 0.24]} />
+          <meshStandardMaterial {...JOINT} />
+        </mesh>
+        {[-1, 0, 1].map((i) => (
+          <mesh key={i} position={[0.052, 0.02 + i * 0.045, -0.3 + i * 0.02]} rotation={[0.5, 0, 0]}>
+            <boxGeometry args={[0.004, 0.11, 0.02]} />
+            <meshStandardMaterial color="#0c0d10" roughness={0.7} />
+          </mesh>
+        ))}
+        <mesh position={[0, 0.16, -0.16]} rotation={[0.5, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.052, 0.058, 0.32, 20]} />
           <meshStandardMaterial {...METAL} />
+        </mesh>
+        <mesh position={[0, 0.24, -0.02]} rotation-x={Math.PI / 2} castShadow>
+          <torusGeometry args={[0.062, 0.012, 10, 24]} />
+          <meshStandardMaterial {...JOINT} />
         </mesh>
         <mesh position={[0, 0.24, -0.02]} castShadow>
           <sphereGeometry args={[0.058, 20, 16]} />
@@ -214,6 +285,10 @@ export function RoboticHand() {
           <mesh castShadow>
             <boxGeometry args={[0.16, 0.05, 0.11]} />
             <meshStandardMaterial {...POLYMER} />
+          </mesh>
+          <mesh position={[0, -0.026, 0]}>
+            <boxGeometry args={[0.15, 0.006, 0.1]} />
+            <meshStandardMaterial {...RUBBER} />
           </mesh>
           <mesh position={[0, 0.026, 0]}>
             <boxGeometry args={[0.152, 0.006, 0.1]} />

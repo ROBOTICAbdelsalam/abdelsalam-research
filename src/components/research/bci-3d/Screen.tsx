@@ -40,6 +40,13 @@ export type ScreenProps = {
   frozen?: boolean;
   bezelColor?: string;
   glow?: string;
+  /**
+   * The desk surface's Y, in the same local space as `position`. When given,
+   * a monitor stand (pole + foot) is drawn rooting the screen to that
+   * surface — without it, a monitor mounted above desk height reads as
+   * floating, which is exactly the "schematic" look this pass is fixing.
+   */
+  deskY?: number;
 };
 
 export function Screen({
@@ -52,6 +59,7 @@ export function Screen({
   frozen = false,
   bezelColor = "#1a1e26",
   glow = "#2a5cff",
+  deskY,
 }: ScreenProps) {
   const canvas = useMemo(() => {
     const el = document.createElement("canvas");
@@ -98,8 +106,29 @@ export function Screen({
   const [w, h] = size;
   const bezel = Math.min(w, h) * 0.045;
 
+  // Stand geometry, in this group's local space (origin = screen center):
+  // the desk surface sits at `poleBottom`, the bezel's bottom edge at
+  // `poleTop` — a thin pole plus a small foot disc between the two.
+  const screenY = position?.[1] ?? 0;
+  const poleBottom = deskY !== undefined ? deskY - screenY : undefined;
+  const poleTop = -(h / 2 + bezel);
+  const poleHeight = poleBottom !== undefined ? poleTop - poleBottom : 0;
+  const showStand = poleBottom !== undefined && poleHeight > 0.02;
+
   return (
     <group position={position as [number, number, number]} rotation={rotation as [number, number, number]}>
+      {showStand && (
+        <group>
+          <mesh position={[0, (poleTop + (poleBottom as number)) / 2, -bezel * 0.4]}>
+            <cylinderGeometry args={[bezel * 0.4, bezel * 0.55, poleHeight, 10]} />
+            <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.6} />
+          </mesh>
+          <mesh position={[0, poleBottom, -bezel * 0.4]}>
+            <cylinderGeometry args={[bezel * 1.7, bezel * 1.9, bezel * 0.4, 18]} />
+            <meshStandardMaterial color="#181b21" roughness={0.5} metalness={0.5} />
+          </mesh>
+        </group>
+      )}
       <mesh>
         <boxGeometry args={[w + bezel * 2, h + bezel * 2, bezel]} />
         <meshStandardMaterial color={bezelColor} roughness={0.55} metalness={0.35} />
