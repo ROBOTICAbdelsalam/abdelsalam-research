@@ -3,22 +3,22 @@
 import { useCallback } from "react";
 import { GESTURES, HONESTY_LABELS, ROS_STACK } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useBciExperiment } from "./BCIExperimentProvider";
-import { Desk } from "./Desk";
-import { CORE_POSITION, facing, GAZEBO_POSITION } from "./layout";
-import { Nameplate } from "./Nameplate";
-import { Screen } from "./Screen";
-import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "./screenTextures";
-import { StationShell } from "./StationShell";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
+import { GAZEBO_POSITION } from "../layout";
+import { Nameplate } from "../Nameplate";
+import { Screen } from "../Screen";
+import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "../screenTextures";
+import { StationZone } from "../StationZone";
 
-// F. GAZEBO ROBOT SIMULATION STATION — a monitor reading the simulated
+// G. GAZEBO ROBOT SIMULATION STATION — a monitor reading the simulated
 // robot's joint/scene state, paired with a small schematic diorama (ground
 // grid, palm + five finger chains, a couple of graspable primitives). The
-// physical five-finger hand itself stands ahead, at its own station (G) —
-// this monitor is the operator's read on that simulation, explicitly
-// labeled as a WebGL representation, never as a live Gazebo connection.
+// physical five-finger hand itself stands ahead, at its own robotics
+// workcell — this monitor is the operator's read on that simulation,
+// explicitly labeled as a WebGL representation, never as a live Gazebo
+// connection.
 
-const YAW = facing(GAZEBO_POSITION, CORE_POSITION);
 const JOINTS_PER_FINGER = 3;
 
 function drawHandSchematic(ctx: CanvasRenderingContext2D, w: number, h: number, top: number, bottom: number, color: string) {
@@ -58,7 +58,6 @@ function drawHandSchematic(ctx: CanvasRenderingContext2D, w: number, h: number, 
   });
   ctx.globalAlpha = 1;
 
-  // Ground grid beneath, and two small graspable objects.
   ctx.strokeStyle = PANEL.border;
   ctx.lineWidth = 1;
   const gy = bottom - 2;
@@ -92,14 +91,11 @@ export function GazeboStation() {
           ? "COMPLETED"
           : "IDLE";
 
-  const drawSim = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      drawBackdrop(ctx, w, h);
-      drawChrome(ctx, w, h, "GAZEBO / ROBOT SIMULATION", HONESTY_LABELS.gazebo, PANEL.cyan);
-      drawHandSchematic(ctx, w, h, h * 0.18, h * 0.98, PANEL.cyan);
-    },
-    [],
-  );
+  const drawSim = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    drawBackdrop(ctx, w, h);
+    drawChrome(ctx, w, h, "GAZEBO / ROBOT SIMULATION", HONESTY_LABELS.gazebo, PANEL.cyan);
+    drawHandSchematic(ctx, w, h, h * 0.18, h * 0.98, PANEL.cyan);
+  }, []);
 
   const drawState = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -115,13 +111,11 @@ export function GazeboStation() {
   );
 
   return (
-    <StationShell id="gazebo" position={GAZEBO_POSITION} radius={1.5} active={active} tint={PANEL.cyan}>
-      <group rotation-y={YAW}>
-        <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.38]} position={[-0.35, 1.12, 0]} draw={drawSim} intervalMs={0} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawState} intervalMs={0} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
-      </group>
-      <Nameplate text="Gazebo Simulation" sub={ROS_STACK.simulator} position={[0, 1.85, 1.3]} />
-    </StationShell>
+    <StationZone id="gazebo" position={GAZEBO_POSITION}>
+      <Workstation />
+      <Screen size={[0.52, 0.34]} position={[-0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawSim} intervalMs={0} frozen={reducedMotion} glow={PANEL.cyan} deskY={DESK_TOP_Y} />
+      <Screen size={[0.52, 0.34]} position={[0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawState} intervalMs={0} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
+      <Nameplate text="Gazebo Simulation" sub={ROS_STACK.simulator} position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+    </StationZone>
   );
 }

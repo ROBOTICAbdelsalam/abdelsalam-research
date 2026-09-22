@@ -1,0 +1,115 @@
+"use client";
+
+import { useCallback } from "react";
+import { GESTURES, HONESTY_LABELS } from "@/data/bci-experiment";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { HAND_POSITION } from "../layout";
+import { Nameplate } from "../Nameplate";
+import { Screen } from "../Screen";
+import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "../screenTextures";
+import { StationZone } from "../StationZone";
+import { RoboticHand } from "./RoboticHand";
+
+// H. ROBOTICS WORKCELL — a real rectangular workbench (no licensed
+// "robotics workbench" GLB fit a premium-lab brief; every candidate
+// checked was rusted/worn shop furniture, so this stays procedural — see
+// src/data/bci-assets.ts), a mounting plate the hand is bolted to, a small
+// parts tray, and a compact robot-state readout. The physical stand-in for
+// "GAZEBO / ROBOT SIMULATION", explicitly labeled as such right at the
+// prop — not only on the paired Gazebo desk elsewhere in the room.
+
+const BENCH_TOP_Y = 0.86;
+
+function Workbench() {
+  return (
+    <group>
+      {/* Benchtop. */}
+      <mesh position-y={BENCH_TOP_Y} castShadow receiveShadow>
+        <boxGeometry args={[1.3, 0.05, 0.75]} />
+        <meshStandardMaterial color="#1c2027" roughness={0.4} metalness={0.55} />
+      </mesh>
+      {/* Undershelf. */}
+      <mesh position-y={0.32}>
+        <boxGeometry args={[1.18, 0.03, 0.62]} />
+        <meshStandardMaterial color="#14171d" roughness={0.55} metalness={0.4} />
+      </mesh>
+      {/* Legs. */}
+      {[-1, 1].map((x) =>
+        [-1, 1].map((z) => (
+          <mesh key={`${x}-${z}`} position={[x * 0.6, BENCH_TOP_Y / 2, z * 0.33]} castShadow>
+            <boxGeometry args={[0.05, BENCH_TOP_Y, 0.05]} />
+            <meshStandardMaterial color="#2a2f38" roughness={0.4} metalness={0.7} />
+          </mesh>
+        )),
+      )}
+      {/* Mounting plate the hand is bolted to. */}
+      <mesh position={[0.05, BENCH_TOP_Y + 0.028, -0.05]} castShadow>
+        <cylinderGeometry args={[0.13, 0.13, 0.03, 20]} />
+        <meshStandardMaterial color="#3a4150" roughness={0.35} metalness={0.7} />
+      </mesh>
+      {/* Small parts tray: a hex-bolt-like part and a chamfered block. */}
+      <mesh position={[-0.48, BENCH_TOP_Y + 0.03, 0.18]} castShadow>
+        <boxGeometry args={[0.1, 0.06, 0.1]} />
+        <meshStandardMaterial color="#3a4150" roughness={0.5} metalness={0.5} />
+      </mesh>
+      <mesh position={[-0.48, BENCH_TOP_Y + 0.065, 0.18]} castShadow>
+        <boxGeometry args={[0.07, 0.012, 0.07]} />
+        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.6} />
+      </mesh>
+      <mesh position={[0.42, BENCH_TOP_Y + 0.045, 0.2]} castShadow>
+        <cylinderGeometry args={[0.045, 0.045, 0.11, 6]} />
+        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.65} />
+      </mesh>
+      {/* Small, contained simulation-grid tile beneath the mounting plate —
+          the one place in the room the grid motif survives, per the
+          realism pass's "grid may exist subtly as part of the robotics
+          environment, but must not dominate the lab". */}
+      <gridHelper args={[0.34, 6, "#2dd4c8", "#193a3a"]} position={[0.05, BENCH_TOP_Y + 0.044, -0.05]} />
+    </group>
+  );
+}
+
+export function RoboticWorkbench() {
+  const { stage, phase, command } = useBciExperiment();
+  const reducedMotion = useReducedMotion();
+  const active = stage === "robot" || stage === "gazebo";
+  const label = GESTURES.find((g) => g.id === command)?.label ?? command;
+
+  const robotState =
+    phase === "EMERGENCY_STOP" ? "STOPPED" : phase === "EXECUTING" || phase === "COMMAND_ACCEPTED" ? "EXECUTING" : phase === "COMPLETED" ? "COMPLETED" : "IDLE";
+
+  const drawState = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      drawBackdrop(ctx, w, h);
+      drawChrome(ctx, w, h, "ROBOT STATE", HONESTY_LABELS.digitalTwin, PANEL.cyan);
+      drawKeyValueRows(ctx, w, h, h * 0.22, [
+        { label: "STATE", value: robotState, color: robotState === "EXECUTING" ? PANEL.cyan : robotState === "STOPPED" ? PANEL.danger : PANEL.text },
+        { label: "GESTURE", value: label.toUpperCase() },
+        { label: "JOINTS", value: "5 × 3" },
+      ]);
+    },
+    [robotState, label],
+  );
+
+  return (
+    <StationZone id="hand" position={HAND_POSITION} size={[2.4, 2.2, 2.0]}>
+      <Workbench />
+      <group position={[0.05, BENCH_TOP_Y + 0.06, -0.05]}>
+        <RoboticHand />
+      </group>
+      <Screen
+        size={[0.4, 0.28]}
+        position={[0.5, BENCH_TOP_Y + 0.32, -0.3]}
+        rotation={[0, -0.5, 0]}
+        draw={drawState}
+        intervalMs={0}
+        frozen={reducedMotion}
+        glow={PANEL.cyan}
+        deskY={BENCH_TOP_Y}
+      />
+      <Nameplate text="Robotic Hand" sub={`Gesture: ${label}`} position={[0, 1.95, 0.42]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+      <Nameplate text={HONESTY_LABELS.gazebo} position={[0, 1.68, 0.42]} width={1.85} color="#eaf1ff" accent="#2dd4c8" />
+    </StationZone>
+  );
+}

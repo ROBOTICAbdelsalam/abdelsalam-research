@@ -7,19 +7,20 @@ import { timeUniform } from "@/components/3d/materials";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useBciExperiment } from "./BCIExperimentProvider";
 import { BCICameraRig } from "./BCICameraRig";
-import { BCICore } from "./BCICore";
-import { AdaptiveDecisionStation } from "./AdaptiveDecisionStation";
-import { CNNLSTMStation } from "./CNNLSTMStation";
-import { DataFlow } from "./DataFlow";
-import { EEGStation } from "./EEGStation";
-import { FeatureExtractionStation } from "./FeatureExtractionStation";
-import { GazeboStation } from "./GazeboStation";
 import { CAMERA_SHOTS } from "./layout";
-import { LabEnvironment, LabLighting } from "./LabEnvironment";
-import { ROS2Station } from "./ROS2Station";
-import { RoboticHand } from "./RoboticHand";
+import { EEGWorkbench } from "./eeg/EEGWorkbench";
+import { LabLighting } from "./environment/LabLighting";
+import { RealisticLab } from "./environment/RealisticLab";
+import { AdaptiveDecisionStation } from "./workstations/AdaptiveDecisionStation";
+import { CNNLSTMStation } from "./workstations/CNNLSTMStation";
+import { FeatureExtractionStation } from "./workstations/FeatureExtractionStation";
+import { GazeboStation } from "./workstations/GazeboStation";
+import { ROS2Station } from "./workstations/ROS2Station";
+import { SignalProcessingStation } from "./workstations/SignalProcessingStation";
+import { RoboticWorkbench } from "./robotics/RoboticWorkbench";
+import { BCICore } from "./visualization/BCICore";
+import { DataFlow } from "./visualization/DataFlow";
 import { SceneQualityContext } from "./sceneQuality";
-import { SignalProcessingStation } from "./SignalProcessingStation";
 
 export type BCILabSceneProps = {
   active: boolean;
@@ -44,7 +45,7 @@ function Clock({ animate }: { animate: boolean }) {
 function EmergencyTint() {
   const { phase } = useBciExperiment();
   const stopped = phase === "EMERGENCY_STOP";
-  return stopped ? <pointLight position={[0, 3, 2]} color="#e0575a" intensity={42} distance={16} decay={2} /> : null;
+  return stopped ? <pointLight position={[0, 2.4, 1]} color="#e0575a" intensity={26} distance={12} decay={2} /> : null;
 }
 
 export function BCILabScene({ active, mobile, dprMax, onReady }: BCILabSceneProps) {
@@ -61,7 +62,7 @@ export function BCILabScene({ active, mobile, dprMax, onReady }: BCILabSceneProp
       dpr={[1, Math.max(1, dprMax * dprFactor)]}
       frameloop={active ? "always" : "demand"}
       gl={{ antialias: true, powerPreference: "high-performance" }}
-      camera={{ position: CAMERA_SHOTS.overview.position as unknown as [number, number, number], fov: 47, near: 0.1, far: 60 }}
+      camera={{ position: CAMERA_SHOTS.overview.position as unknown as [number, number, number], fov: 50, near: 0.1, far: 50 }}
       onCreated={({ gl }) => {
         gl.setClearColor(0x05070a, 1);
         requestAnimationFrame(onReady);
@@ -71,20 +72,20 @@ export function BCILabScene({ active, mobile, dprMax, onReady }: BCILabSceneProp
       <SceneQualityContext.Provider value={quality}>
         <PerformanceMonitor onDecline={() => setDprFactor(0.67)} onIncline={() => setDprFactor(1)} flipflops={3} />
         <Clock animate={!reducedMotion} />
-        <fog attach="fog" args={["#05070a", 16, 34]} />
+        <fog attach="fog" args={["#05070a", 10, 26]} />
         <LabLighting />
         <EmergencyTint />
-        <LabEnvironment />
+        <RealisticLab />
         <DataFlow />
         <BCICore />
-        <EEGStation />
+        <EEGWorkbench />
         <SignalProcessingStation />
         <FeatureExtractionStation />
         <CNNLSTMStation />
         <AdaptiveDecisionStation />
         <ROS2Station />
         <GazeboStation />
-        <RoboticHand />
+        <RoboticWorkbench />
         <BCICameraRig />
       </SceneQualityContext.Provider>
     </Canvas>

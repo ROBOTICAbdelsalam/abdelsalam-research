@@ -3,13 +3,13 @@
 import { useCallback } from "react";
 import { ADAPTIVE_LAYER_STATE, GESTURES, LIVE_GATE_THRESHOLD } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useBciExperiment } from "./BCIExperimentProvider";
-import { Desk } from "./Desk";
-import { ADAPTIVE_DECISION_POSITION, CORE_POSITION, facing } from "./layout";
-import { Nameplate } from "./Nameplate";
-import { Screen } from "./Screen";
-import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "./screenTextures";
-import { StationShell } from "./StationShell";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
+import { ADAPTIVE_DECISION_POSITION } from "../layout";
+import { Nameplate } from "../Nameplate";
+import { Screen } from "../Screen";
+import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "../screenTextures";
+import { StationZone } from "../StationZone";
 
 // E. ADAPTIVE DECISION STATION — two clearly separated readouts:
 //  - the live confidence gate this demo actually drives (fixed 0.75 gate),
@@ -17,8 +17,6 @@ import { StationShell } from "./StationShell";
 //  - the adaptive layer's own documented cold-start state (3 feedback
 //    samples, 0.90 threshold, WAITING), a static fact panel this demo does
 //    not alter — it is never implied that retraining has happened here.
-
-const YAW = facing(ADAPTIVE_DECISION_POSITION, CORE_POSITION);
 
 export function AdaptiveDecisionStation() {
   const { stage, phase, command, confidence, accepted } = useBciExperiment();
@@ -59,13 +57,11 @@ export function AdaptiveDecisionStation() {
   }, []);
 
   return (
-    <StationShell id="adaptive-decision" position={ADAPTIVE_DECISION_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
-      <group rotation-y={YAW}>
-        <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.38]} position={[-0.35, 1.12, 0]} draw={drawGate} intervalMs={140} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawAdaptive} intervalMs={0} frozen={reducedMotion} glow={PANEL.amber} deskY={0.78} />
-      </group>
-      <Nameplate text="Adaptive Decision" sub="Confidence gate · cold start" position={[0, 1.85, 1.3]} />
-    </StationShell>
+    <StationZone id="adaptive-decision" position={ADAPTIVE_DECISION_POSITION}>
+      <Workstation />
+      <Screen size={[0.52, 0.34]} position={[-0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawGate} intervalMs={140} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
+      <Screen size={[0.52, 0.34]} position={[0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawAdaptive} intervalMs={0} frozen={reducedMotion} glow={PANEL.amber} deskY={DESK_TOP_Y} />
+      <Nameplate text="Adaptive Decision" sub="Confidence gate · cold start" position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+    </StationZone>
   );
 }

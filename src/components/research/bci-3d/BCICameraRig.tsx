@@ -32,13 +32,25 @@ const ROOM_CLAMP_MAX = new THREE.Vector3(X_MAX, Y_MAX, Z_MAX);
 // Lab disables it) since this experience's interaction list explicitly
 // includes pan.
 //
-// The correction only runs for a bounded window right after `cameraMode`
-// changes (TRANSITION_MS) — earlier versions ran it every frame forever,
-// which meant any manual drag/scroll got silently pulled back toward the
-// active preset within a second or two. Section 19 explicitly promises
-// free orbit/pan/zoom once the guided tour settles ("explore lab"), so the
-// rig has to actually let go once a transition finishes.
-const TRANSITION_MS = 1300;
+// The correction only runs while a transition is actually in progress —
+// earlier versions ran it every frame forever, which meant any manual
+// drag/scroll got silently pulled back toward the active preset within a
+// second or two. Section 19 explicitly promises free orbit/pan/zoom once
+// the guided tour settles ("explore lab"), so the rig has to actually let
+// go once a transition finishes.
+//
+// "Finishes" is decided by actual convergence (position/target within
+// CONVERGE_EPS of the shot), not a fixed wall-clock duration — a
+// frame-count-based lerp (fixed factor per frame, not delta-time-scaled,
+// matching the proven AI Lab pattern this was copied from) makes real
+// progress proportional to how many frames actually ran, not to elapsed
+// time. A fixed-duration window mismatched a slow/throttled frame rate
+// would expire before the camera arrived, silently stranding it partway
+// and handing an unfinished transition to free-orbit. MAX_TRANSITION_MS is
+// only a safety cap, for the pathological case convergence is never quite
+// reached.
+const MAX_TRANSITION_MS = 8000;
+const CONVERGE_EPS = 0.015;
 
 export function BCICameraRig() {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -46,29 +58,50 @@ export function BCICameraRig() {
   const { cameraMode } = useBciExperiment();
   const reducedMotion = useReducedMotion();
 
-  const desiredTarget = useRef(new THREE.Vector3(...CAMERA_SHOTS.overview.target));
+  const desiredTarget = useRef(new THREE.Vector3());
+  const desiredPosition = useRef(new THREE.Vector3());
   const currentOffset = useRef(new THREE.Vector3());
   const desiredOffset = useRef(new THREE.Vector3());
   const currentSpherical = useRef(new THREE.Spherical());
   const desiredSpherical = useRef(new THREE.Spherical());
 
   const lastMode = useRef(cameraMode);
-  const transitionEndAt = useRef(0);
+  const transitioning = useRef(false);
+  const transitionStartedAt = useRef(0);
 
   useEffect(() => {
     if (lastMode.current !== cameraMode) {
       lastMode.current = cameraMode;
-      transitionEndAt.current = performance.now() + TRANSITION_MS;
+      transitioning.current = true;
+      transitionStartedAt.current = performance.now();
     }
   }, [cameraMode]);
+
+  // Sets the initial target ONCE at mount, imperatively — deliberately not
+  // via OrbitControls' `target` JSX prop. drei re-applies that prop on
+  // every re-render this component receives (dprFactor flips, any context
+  // update anywhere up the tree, etc.), which silently snapped
+  // controls.target back to the overview target mid-transition: the exact
+  // bug that made every non-overview camera preset look like it never
+  // moved. The old (pre-transition-window) rig never surfaced this,
+  // because it re-forced controls.target every single frame regardless —
+  // this reactive reset was there the whole time, just invisible under
+  // that constant override.
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    controls.target.set(...CAMERA_SHOTS.overview.target);
+    controls.update();
+  }, []);
 
   useFrame(() => {
     const controls = controlsRef.current;
     if (!controls) return;
 
-    if (performance.now() < transitionEndAt.current) {
+    if (transitioning.current) {
       const shot = CAMERA_SHOTS[cameraMode];
       desiredTarget.current.set(...shot.target);
+      desiredPosition.current.set(...shot.position);
 
       const lerpFactor = reducedMotion ? 1 : 0.06;
       controls.target.lerp(desiredTarget.current, lerpFactor);
@@ -76,7 +109,7 @@ export function BCICameraRig() {
       currentOffset.current.copy(camera.position).sub(controls.target);
       currentSpherical.current.setFromVector3(currentOffset.current);
 
-      desiredOffset.current.set(...shot.position).sub(desiredTarget.current);
+      desiredOffset.current.copy(desiredPosition.current).sub(desiredTarget.current);
       desiredSpherical.current.setFromVector3(desiredOffset.current);
 
       currentSpherical.current.radius = THREE.MathUtils.lerp(currentSpherical.current.radius, desiredSpherical.current.radius, lerpFactor);
@@ -88,9 +121,16 @@ export function BCICameraRig() {
 
       currentOffset.current.setFromSpherical(currentSpherical.current);
       camera.position.copy(controls.target).add(currentOffset.current);
+
+      const arrived =
+        reducedMotion ||
+        (controls.target.distanceToSquared(desiredTarget.current) < CONVERGE_EPS * CONVERGE_EPS &&
+          camera.position.distanceToSquared(desiredPosition.current) < CONVERGE_EPS * CONVERGE_EPS);
+      const timedOut = performance.now() - transitionStartedAt.current > MAX_TRANSITION_MS;
+      if (arrived || timedOut) transitioning.current = false;
     }
-    // Outside a transition window, OrbitControls owns the camera outright —
-    // this call only applies damping, never pulls position/target back.
+    // Outside a transition, OrbitControls owns the camera outright — this
+    // call only applies damping, never pulls position/target back.
     controls.update();
 
     // Hard safety net, every frame: keep both the orbit target (which
@@ -117,7 +157,6 @@ export function BCICameraRig() {
       maxDistance={CAMERA_LIMITS.maxDistance}
       minPolarAngle={CAMERA_LIMITS.minPolarAngle}
       maxPolarAngle={CAMERA_LIMITS.maxPolarAngle}
-      target={CAMERA_SHOTS.overview.target}
     />
   );
 }

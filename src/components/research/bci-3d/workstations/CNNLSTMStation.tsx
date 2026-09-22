@@ -3,21 +3,20 @@
 import { useCallback } from "react";
 import { GESTURES, LIVE_GATE_THRESHOLD, MODEL_NAME } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useBciExperiment } from "./BCIExperimentProvider";
-import { Desk } from "./Desk";
-import { CNN_LSTM_POSITION, CORE_POSITION, facing } from "./layout";
-import { Nameplate } from "./Nameplate";
-import { Screen } from "./Screen";
-import { stageIndex } from "./state";
-import { drawBackdrop, drawChrome, drawConfidenceBars, drawPipelineChain, PANEL } from "./screenTextures";
-import { StationShell } from "./StationShell";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
+import { CNN_LSTM_POSITION } from "../layout";
+import { Nameplate } from "../Nameplate";
+import { Screen } from "../Screen";
+import { stageIndex } from "../state";
+import { drawBackdrop, drawChrome, drawConfidenceBars, drawPipelineChain, PANEL } from "../screenTextures";
+import { StationZone } from "../StationZone";
 
 // D. CNN-LSTM CLASSIFICATION STATION — the deployed model (CNN-LSTM; no
 // other architecture is shown as deployed). One monitor traces
 // Input → CNN → LSTM → Classification → Confidence; the other shows the six
 // gesture classes' probabilities, the selected command highlighted.
 
-const YAW = facing(CNN_LSTM_POSITION, CORE_POSITION);
 const CHAIN = ["INPUT", "CNN", "LSTM", "CLASS", "CONF"];
 
 export function CNNLSTMStation() {
@@ -46,13 +45,11 @@ export function CNNLSTMStation() {
   );
 
   return (
-    <StationShell id="cnn-lstm" position={CNN_LSTM_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
-      <group rotation-y={YAW}>
-        <Desk width={1.4} depth={0.62} />
-        <Screen size={[0.56, 0.34]} position={[-0.35, 1.1, 0]} draw={drawChain} intervalMs={90} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
-        <Screen size={[0.56, 0.38]} position={[0.35, 1.12, 0]} draw={drawBars} intervalMs={200} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
-      </group>
-      <Nameplate text="CNN-LSTM" sub="Motor-imagery classification" position={[0, 1.85, 1.3]} />
-    </StationShell>
+    <StationZone id="cnn-lstm" position={CNN_LSTM_POSITION}>
+      <Workstation />
+      <Screen size={[0.52, 0.3]} position={[-0.35, DESK_TOP_Y + 0.3, -0.28]} draw={drawChain} intervalMs={90} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
+      <Screen size={[0.52, 0.34]} position={[0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawBars} intervalMs={200} frozen={reducedMotion} glow={PANEL.cyan} deskY={DESK_TOP_Y} />
+      <Nameplate text="CNN-LSTM" sub="Motor-imagery classification" position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+    </StationZone>
   );
 }

@@ -5,23 +5,20 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Group } from "three";
 import { setSlot } from "@/components/3d/imperative";
-import { GESTURES, HONESTY_LABELS } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useBciExperiment } from "./BCIExperimentProvider";
-import { HAND_POSES, type HandPose } from "./handPoses";
-import { HAND_POSITION } from "./layout";
-import { Nameplate } from "./Nameplate";
-import { StationShell } from "./StationShell";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { HAND_POSES, type HandPose } from "../handPoses";
 
-// G. FIVE-FINGER ROBOTIC HAND — the experiment's physical outcome, and the
-// scene's centerpiece prop: palm, wrist, and five real 3-joint finger
-// chains (a thumb plus four fingers), procedurally posed per the thesis
-// gesture vocabulary. No GLB robotic-hand model exists in the repository
-// (checked before building this), so this is a purposeful procedural rig
-// rather than a decorative shape. Mounted on a small simulation pedestal
-// with a ground-grid tile and two graspable primitives — the tangible
-// stand-in for "GAZEBO / ROBOT SIMULATION", explicitly labeled as such
-// right at the prop, not only on the paired station's monitor.
+// FIVE-FINGER ROBOTIC HAND — the experiment's physical outcome: palm,
+// wrist, and five real 3-joint finger chains (a thumb plus four fingers),
+// procedurally posed per the thesis gesture vocabulary. No licensed
+// real-world robotic-hand asset exists (src/data/bci-assets.ts — checked
+// before building this), so this is a purposeful procedural joint
+// hierarchy rather than a decorative shape.
+//
+// Pure hand geometry only — mounting, the workbench, and the honesty
+// labels live in RoboticWorkbench.tsx, which positions this at its own
+// wrist-mount point.
 
 const METAL = { color: "#c3ccdb", metalness: 0.75, roughness: 0.32 } as const;
 const JOINT = { color: "#20242e", metalness: 0.7, roughness: 0.45 } as const;
@@ -46,19 +43,9 @@ const FINGERS: FingerSpec[] = [
 const PHALANX_RADIUS = 0.011;
 const BASE_SEGMENT = 0.052;
 
-function Phalanges({
-  scale,
-  refs,
-  refBase,
-}: {
-  scale: number;
-  refs: React.MutableRefObject<(Group | null)[]>;
-  refBase: number;
-}) {
+function Phalanges({ scale, refs, refBase }: { scale: number; refs: React.MutableRefObject<(Group | null)[]>; refBase: number }) {
   const lengths = [BASE_SEGMENT * scale, BASE_SEGMENT * 0.86 * scale, BASE_SEGMENT * 0.62 * scale];
-  return (
-    <Segment lengths={lengths} depth={0} refs={refs} refBase={refBase} />
-  );
+  return <Segment lengths={lengths} depth={0} refs={refs} refBase={refBase} />;
 }
 
 function Segment({
@@ -77,11 +64,7 @@ function Segment({
   const radius = PHALANX_RADIUS * (1 - depth * 0.16);
   const isTip = depth === lengths.length - 1;
   return (
-    <group
-      ref={(g) => {
-        setSlot(refs.current, refBase + depth, g);
-      }}
-    >
+    <group ref={(g) => setSlot(refs.current, refBase + depth, g)}>
       <mesh position-y={length / 2} castShadow>
         <capsuleGeometry args={[radius, Math.max(length - radius * 2, 0.004), 4, 10]} />
         <meshStandardMaterial {...(depth === 1 ? POLYMER : METAL)} />
@@ -163,11 +146,7 @@ function Thumb({ refs }: { refs: React.MutableRefObject<(Group | null)[]> }) {
 }
 
 // Interpolated joint targets → concrete rotation angles per finger joint.
-function applyPose(
-  fingerRefs: React.MutableRefObject<(Group | null)[]>[],
-  thumbRefs: React.MutableRefObject<(Group | null)[]>,
-  pose: HandPose,
-) {
+function applyPose(fingerRefs: React.MutableRefObject<(Group | null)[]>[], thumbRefs: React.MutableRefObject<(Group | null)[]>, pose: HandPose) {
   FINGERS.forEach((finger, fi) => {
     const refs = fingerRefs[fi].current;
     const curl = pose.curl[fi];
@@ -185,10 +164,8 @@ function applyPose(
 }
 
 export function RoboticHand() {
-  const { stage, phase, command, accepted } = useBciExperiment();
+  const { phase, command, accepted } = useBciExperiment();
   const reducedMotion = useReducedMotion();
-  const active = stage === "robot" || stage === "gazebo";
-  const label = GESTURES.find((g) => g.id === command)?.label ?? command;
 
   const indexRefs = useRef<(Group | null)[]>([]);
   const middleRefs = useRef<(Group | null)[]>([]);
@@ -202,8 +179,7 @@ export function RoboticHand() {
   // Executing/holding a command the gate accepted shows that gesture; every
   // other state (idle, rejected, mid-inference, stopped) shows REST — a
   // rejected prediction never moves the hand.
-  const targetId =
-    (phase === "COMMAND_ACCEPTED" || phase === "EXECUTING" || phase === "COMPLETED") && accepted ? command : "REST";
+  const targetId = (phase === "COMMAND_ACCEPTED" || phase === "EXECUTING" || phase === "COMPLETED") && accepted ? command : "REST";
   const target = HAND_POSES[targetId];
 
   useFrame((_, delta) => {
@@ -222,90 +198,55 @@ export function RoboticHand() {
   });
 
   return (
-    <StationShell id="hand" position={HAND_POSITION} radius={1.9} active={active} tint="#2dd4c8">
-      {/* Simulation workcell: raised mounting platform, a workbench top,
-          ground-grid tile, and a small tray of graspable parts — a real
-          bench the hand is bolted to, not a bare disc. */}
-      <mesh position-y={0.42} castShadow receiveShadow>
-        <cylinderGeometry args={[0.62, 0.68, 0.84, 28]} />
-        <meshStandardMaterial color="#171b22" roughness={0.55} metalness={0.4} />
+    <group>
+      {/* Forearm + wrist: a segmented forearm, a motor housing with vent
+          slats, and a mounting flange at the wrist joint — actuator
+          hardware, not a bare rod. */}
+      <mesh position={[0, 0.06, -0.3]} rotation={[0.5, 0, 0]} castShadow>
+        <boxGeometry args={[0.1, 0.16, 0.24]} />
+        <meshStandardMaterial {...JOINT} />
       </mesh>
-      <mesh position-y={0.845} castShadow receiveShadow>
-        <cylinderGeometry args={[0.66, 0.66, 0.03, 32]} />
-        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.55} />
+      {[-1, 0, 1].map((i) => (
+        <mesh key={i} position={[0.052, 0.02 + i * 0.045, -0.3 + i * 0.02]} rotation={[0.5, 0, 0]}>
+          <boxGeometry args={[0.004, 0.11, 0.02]} />
+          <meshStandardMaterial color="#0c0d10" roughness={0.7} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.16, -0.16]} rotation={[0.5, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.052, 0.058, 0.32, 20]} />
+        <meshStandardMaterial {...METAL} />
       </mesh>
-      <gridHelper args={[1.05, 8, "#2dd4c8", "#193a3a"]} position={[0, 0.862, 0]} />
-      {/* Small parts tray: a hex-bolt-like part and a chamfered block. */}
-      <mesh position={[-0.38, 0.885, 0.24]} castShadow>
-        <boxGeometry args={[0.1, 0.07, 0.1]} />
-        <meshStandardMaterial color="#3a4150" roughness={0.5} metalness={0.5} />
+      <mesh position={[0, 0.24, -0.02]} rotation-x={Math.PI / 2} castShadow>
+        <torusGeometry args={[0.062, 0.012, 10, 24]} />
+        <meshStandardMaterial {...JOINT} />
       </mesh>
-      <mesh position={[-0.38, 0.925, 0.24]} castShadow>
-        <boxGeometry args={[0.07, 0.012, 0.07]} />
-        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.6} />
-      </mesh>
-      <mesh position={[0.36, 0.895, -0.2]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 0.13, 6]} />
-        <meshStandardMaterial color="#4a5160" roughness={0.35} metalness={0.65} />
-      </mesh>
-      <mesh position={[0.36, 0.965, -0.2]} castShadow>
-        <cylinderGeometry args={[0.018, 0.018, 0.05, 8]} />
-        <meshStandardMaterial color="#5a6272" roughness={0.3} metalness={0.7} />
+      <mesh position={[0, 0.24, -0.02]} castShadow>
+        <sphereGeometry args={[0.058, 20, 16]} />
+        <meshStandardMaterial {...JOINT} />
       </mesh>
 
-      {/* Forearm + wrist, fixed to the pedestal: a segmented forearm, a
-          motor housing with vent slats, and a mounting flange at the
-          wrist joint — actuator hardware, not a bare rod. */}
-      <group position={[0, 0.86, 0]}>
-        <mesh position={[0, 0.06, -0.3]} rotation={[0.5, 0, 0]} castShadow>
-          <boxGeometry args={[0.1, 0.16, 0.24]} />
-          <meshStandardMaterial {...JOINT} />
+      {/* Palm. */}
+      <group position={[0, 0.26, 0.05]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.16, 0.05, 0.11]} />
+          <meshStandardMaterial {...POLYMER} />
         </mesh>
-        {[-1, 0, 1].map((i) => (
-          <mesh key={i} position={[0.052, 0.02 + i * 0.045, -0.3 + i * 0.02]} rotation={[0.5, 0, 0]}>
-            <boxGeometry args={[0.004, 0.11, 0.02]} />
-            <meshStandardMaterial color="#0c0d10" roughness={0.7} />
-          </mesh>
+        <mesh position={[0, -0.026, 0]}>
+          <boxGeometry args={[0.15, 0.006, 0.1]} />
+          <meshStandardMaterial {...RUBBER} />
+        </mesh>
+        <mesh position={[0, 0.026, 0]}>
+          <boxGeometry args={[0.152, 0.006, 0.1]} />
+          <meshStandardMaterial color="#2dd4c8" emissive="#2dd4c8" emissiveIntensity={0.5} toneMapped={false} />
+        </mesh>
+
+        {FINGERS.map((finger, fi) => (
+          <group key={finger.id} position={[finger.x, 0.026, 0.05]}>
+            <Phalanges scale={finger.scale} refs={fingerRefs[fi]} refBase={0} />
+          </group>
         ))}
-        <mesh position={[0, 0.16, -0.16]} rotation={[0.5, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.052, 0.058, 0.32, 20]} />
-          <meshStandardMaterial {...METAL} />
-        </mesh>
-        <mesh position={[0, 0.24, -0.02]} rotation-x={Math.PI / 2} castShadow>
-          <torusGeometry args={[0.062, 0.012, 10, 24]} />
-          <meshStandardMaterial {...JOINT} />
-        </mesh>
-        <mesh position={[0, 0.24, -0.02]} castShadow>
-          <sphereGeometry args={[0.058, 20, 16]} />
-          <meshStandardMaterial {...JOINT} />
-        </mesh>
-
-        {/* Palm. */}
-        <group position={[0, 0.26, 0.05]}>
-          <mesh castShadow>
-            <boxGeometry args={[0.16, 0.05, 0.11]} />
-            <meshStandardMaterial {...POLYMER} />
-          </mesh>
-          <mesh position={[0, -0.026, 0]}>
-            <boxGeometry args={[0.15, 0.006, 0.1]} />
-            <meshStandardMaterial {...RUBBER} />
-          </mesh>
-          <mesh position={[0, 0.026, 0]}>
-            <boxGeometry args={[0.152, 0.006, 0.1]} />
-            <meshStandardMaterial color="#2dd4c8" emissive="#2dd4c8" emissiveIntensity={0.5} toneMapped={false} />
-          </mesh>
-
-          {FINGERS.map((finger, fi) => (
-            <group key={finger.id} position={[finger.x, 0.026, 0.05]}>
-              <Phalanges scale={finger.scale} refs={fingerRefs[fi]} refBase={0} />
-            </group>
-          ))}
-          <Thumb refs={thumbRefs} />
-        </group>
+        <Thumb refs={thumbRefs} />
       </group>
-
-      <Nameplate text="Robotic Hand" sub={`Gesture: ${label}`} position={[0, 1.95, 1.55]} accent="#2dd4c8" />
-      <Nameplate text={HONESTY_LABELS.gazebo} position={[0, 1.68, 1.55]} width={1.85} color="#eaf1ff" accent="#2dd4c8" />
-    </StationShell>
+    </group>
   );
 }

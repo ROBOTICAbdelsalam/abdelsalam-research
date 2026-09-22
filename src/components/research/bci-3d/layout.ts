@@ -1,17 +1,13 @@
 import type { PipelineStageId } from "@/data/bci-experiment";
 
-// Spatial layout for the BCI digital-twin laboratory. One shared config so
-// positions aren't scattered across station components — mirrors the
-// convention in src/lib/ai-lab/layout.ts. Units are meters-ish, Y up, floor
-// at y = 0.
-//
-// Composition: a straight pipeline spine along +Z, not a random scatter.
-// The EEG participant sits at the back (-Z); signal processing and feature
-// extraction form a left/right pair midway; the CNN-LSTM and adaptive gate
-// form the next pair; the central BCI core sits on the spine between the
-// AI stages and the robotics stages; ROS 2 and Gazebo form the final pair;
-// the five-finger robotic hand — the experiment's physical outcome — stands
-// alone at the front, closest to the default camera.
+// Spatial layout for the BCI digital-twin laboratory — REBUILT for the
+// realism pass (see the physical-lab rebuild notes). Previous layout: a
+// front-to-back "pipeline spine" with stations as isolated glowing circular
+// pads. New layout: a real open-plan lab room, workstations against one
+// back wall in pipeline left-to-right order (matching a visitor's natural
+// reading direction), a central BCI visualization as a walk-up landmark on
+// the open floor, and a separate robotics workcell island — not a corridor,
+// not a ring of platforms. Units are meters, Y up, floor at y = 0.
 
 export type Vec3 = readonly [number, number, number];
 
@@ -25,15 +21,28 @@ export type StationId =
   | "gazebo"
   | "hand";
 
-export const EEG_POSITION: Vec3 = [-2.1, 0, -11.2];
-export const SIGNAL_PROCESSING_POSITION: Vec3 = [-3.6, 0, -7.3];
-export const FEATURE_EXTRACTION_POSITION: Vec3 = [3.6, 0, -7.3];
-export const CNN_LSTM_POSITION: Vec3 = [-3.6, 0, -3.2];
-export const ADAPTIVE_DECISION_POSITION: Vec3 = [3.6, 0, -3.2];
-export const CORE_POSITION: Vec3 = [0, 0, 0.6];
-export const ROS2_POSITION: Vec3 = [-3.6, 0, 5.0];
-export const GAZEBO_POSITION: Vec3 = [3.6, 0, 5.0];
-export const HAND_POSITION: Vec3 = [0, 0, 9.6];
+// Desk-row stations sit against the back wall (z = DESK_ROW_Z), left to
+// right in pipeline order. Desks are real-world-scale (the Metal Office
+// Desk GLB is 2m wide), so a 3m pitch gives a 1m walking gap between them.
+export const DESK_ROW_Z = -7.0;
+const DESK_PITCH = 3.0;
+const DESK_ROW_X0 = -10.5; // EEG desk's x; each later station adds DESK_PITCH
+
+export const EEG_POSITION: Vec3 = [DESK_ROW_X0, 0, DESK_ROW_Z];
+export const SIGNAL_PROCESSING_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH, 0, DESK_ROW_Z];
+export const FEATURE_EXTRACTION_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 2, 0, DESK_ROW_Z];
+export const CNN_LSTM_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 3, 0, DESK_ROW_Z];
+export const ADAPTIVE_DECISION_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 4, 0, DESK_ROW_Z];
+export const ROS2_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 5, 0, DESK_ROW_Z];
+export const GAZEBO_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 6, 0, DESK_ROW_Z];
+
+// The central BCI visualization: a walk-up landmark on the open floor,
+// roughly centered over the desk row, well forward of the wall.
+export const CORE_POSITION: Vec3 = [-2.5, 0, -2.4];
+
+// The robotics workcell: a separate island to the right, off the wall row
+// entirely — "FAR RIGHT: robotic hand / robot workcell".
+export const HAND_POSITION: Vec3 = [9.6, 0, 1.4];
 
 export const STATION_POSITIONS: Record<StationId, Vec3> = {
   eeg: EEG_POSITION,
@@ -47,13 +56,19 @@ export const STATION_POSITIONS: Record<StationId, Vec3> = {
 };
 
 export const ROOM = {
-  halfWidth: 8.6,
-  halfDepth: 13.4,
-  centerZ: -0.6,
-  wallHeight: 6,
+  halfWidth: 12.6,
+  halfDepth: 8.2,
+  centerZ: -1.0,
+  // A real institutional-lab ceiling height, not a warehouse — see the
+  // lighting rebuild for how fixture intensities were recalibrated to this
+  // much shorter throw distance than the previous 6m version.
+  wallHeight: 3.4,
 } as const;
 
-// Yaw (radians) so a group's default forward (-Z) faces a point.
+// Yaw (radians) so a group's default forward (-Z) faces a point. Still used
+// by the central core and the robotics workcell (which face inward, toward
+// the room, from off-wall positions) — the desk-row stations no longer need
+// it, since they all face the same way (+Z, into the room) by construction.
 export function facing(from: Vec3, to: Vec3) {
   return Math.atan2(from[0] - to[0], from[2] - to[2]);
 }
@@ -71,25 +86,33 @@ export const CAMERA_MODES: readonly { id: CameraMode; label: string }[] = [
 
 export type CameraShot = { position: Vec3; target: Vec3 };
 
-// Keeps enough surrounding context visible per station — never a tight
-// crop on a single desk. Heights are deliberately kept closer to standing
-// eye level (~1.6-2m of clearance above the floor rather than up near the
-// ceiling) so the default read is "a person standing in the lab", not an
-// overhead strategy-game camera — see the realism pass's camera notes.
+// Human eye-level shots — a visitor standing inside the lab, not a drone or
+// a strategy-game overhead view. Kept comfortably inside ROOM's bounds;
+// BCICameraRig's hard target/position clamp is the actual safety net for
+// free orbit/pan/zoom (see that file), so these don't need the exhaustive
+// per-azimuth derivation the previous corridor layout required — this room
+// is wide and shallow, not long and narrow, so the clamp alone is enough.
 export const CAMERA_SHOTS: Record<CameraMode, CameraShot> = {
-  overview: { position: [6.6, 4.1, 9.4], target: [0, 1.35, -1.6] },
-  eeg: { position: [2.6, 2.7, -6.3], target: [-1.6, 1.5, -10.6] },
-  ai: { position: [6.8, 3.9, -2.2], target: [0, 1.65, -5.6] },
-  adaptive: { position: [6.2, 3.1, -1.1], target: [3.0, 1.35, -3.5] },
-  ros2: { position: [-6.4, 3.2, 7.3], target: [-3.2, 1.35, 5.2] },
-  robot: { position: [4.4, 3.2, 11.8], target: [0, 1.6, 9.4] },
+  overview: { position: [-1, 2.5, 6.2], target: [-1, 1.35, -3.2] },
+  eeg: { position: [-8.6, 1.95, -3.1], target: [DESK_ROW_X0, 1.35, DESK_ROW_Z - 0.6] },
+  ai: {
+    position: [DESK_ROW_X0 + DESK_PITCH * 2, 2.1, -1.6],
+    target: [DESK_ROW_X0 + DESK_PITCH * 2, 1.35, DESK_ROW_Z - 0.3],
+  },
+  adaptive: {
+    position: [ADAPTIVE_DECISION_POSITION[0] - 1.2, 2.0, -1.9],
+    target: [ADAPTIVE_DECISION_POSITION[0], 1.35, DESK_ROW_Z - 0.3],
+  },
+  ros2: {
+    position: [ROS2_POSITION[0] - 0.8, 2.1, -1.6],
+    target: [ROS2_POSITION[0], 1.35, DESK_ROW_Z - 0.3],
+  },
+  robot: { position: [7.8, 2.1, 3.6], target: [HAND_POSITION[0], 1.3, HAND_POSITION[2]] },
 };
 
 // Which camera preset the guided tour switches to while a given pipeline
-// stage is active (see section 19 — start drives the camera through the
-// stations in pipeline order; the six presets group the nine stages by
-// physical neighborhood, same grouping BCIInfoPanel already uses per
-// station).
+// stage is active (section 19 — start drives the camera through the
+// stations in pipeline order).
 export const STAGE_CAMERA: Record<PipelineStageId, CameraMode> = {
   eeg: "eeg",
   preprocessing: "ai",
@@ -103,17 +126,12 @@ export const STAGE_CAMERA: Record<PipelineStageId, CameraMode> = {
 };
 
 export const CAMERA_LIMITS = {
-  minDistance: 2.4,
-  // Comfortably above the widest preset's own baseline radius (overview,
-  // ~13.1m) so settling into free orbit right after a guided transition
-  // never causes a sudden re-clamp jump, while still bounding how far a
-  // user can scroll-zoom out. This isn't the room's real safety net — an
-  // irregular, off-center room means a single azimuth-independent distance
-  // can't guarantee every orbit angle stays inside the walls. The actual
-  // guarantee is the position/target clamp in BCICameraRig, which keeps the
-  // camera and its orbit target inside the room outright regardless of
-  // zoom or pan; this maxDistance just keeps ordinary zoom-out reasonable.
-  maxDistance: 16,
-  minPolarAngle: Math.PI * 0.08,
+  minDistance: 1.8,
+  // Comfortably above every preset's own baseline radius so settling into
+  // free orbit right after a guided transition never causes a re-clamp
+  // jump. The room's hard position/target clamp (BCICameraRig) is what
+  // actually keeps the camera inside the walls at this distance.
+  maxDistance: 13,
+  minPolarAngle: Math.PI * 0.1,
   maxPolarAngle: Math.PI * 0.49,
 };

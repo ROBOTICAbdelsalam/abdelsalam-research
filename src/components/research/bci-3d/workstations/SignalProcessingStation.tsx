@@ -3,19 +3,17 @@
 import { useCallback } from "react";
 import { PREPROCESSING, EEG_ACQUISITION } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { useBciExperiment } from "./BCIExperimentProvider";
-import { Desk } from "./Desk";
-import { CORE_POSITION, facing, SIGNAL_PROCESSING_POSITION } from "./layout";
-import { Nameplate } from "./Nameplate";
-import { Screen } from "./Screen";
-import { drawBackdrop, drawChrome, drawEpochGrid, drawWaveform, PANEL } from "./screenTextures";
-import { StationShell } from "./StationShell";
+import { useBciExperiment } from "../BCIExperimentProvider";
+import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
+import { SIGNAL_PROCESSING_POSITION } from "../layout";
+import { Nameplate } from "../Nameplate";
+import { Screen } from "../Screen";
+import { drawBackdrop, drawChrome, drawEpochGrid, drawWaveform, PANEL } from "../screenTextures";
+import { StationZone } from "../StationZone";
 
-// B. SIGNAL PROCESSING STATION — a three-monitor workstation: raw EEG,
+// B. SIGNAL PROCESSING STATION — a real desk with three monitors: raw EEG,
 // filtered EEG (the thesis's documented 1–40 Hz band-pass), and a combined
 // ICA-review / epoching readout (with the documented 29 valid epochs).
-
-const YAW = facing(SIGNAL_PROCESSING_POSITION, CORE_POSITION);
 
 export function SignalProcessingStation() {
   const { stage } = useBciExperiment();
@@ -50,14 +48,12 @@ export function SignalProcessingStation() {
   }, []);
 
   return (
-    <StationShell id="signal-processing" position={SIGNAL_PROCESSING_POSITION} radius={1.5} active={active} tint={PANEL.accent}>
-      <group rotation-y={YAW}>
-        <Desk width={1.7} depth={0.62} />
-        <Screen size={[0.5, 0.34]} position={[-0.58, 1.1, 0]} draw={drawRaw} intervalMs={100} frozen={reducedMotion} glow={PANEL.accent} deskY={0.78} />
-        <Screen size={[0.5, 0.34]} position={[0, 1.14, 0]} draw={drawFiltered} intervalMs={100} frozen={reducedMotion} glow={PANEL.cyan} deskY={0.78} />
-        <Screen size={[0.5, 0.34]} position={[0.58, 1.1, 0]} draw={drawIcaEpoch} intervalMs={220} frozen={reducedMotion} glow={PANEL.amber} deskY={0.78} />
-      </group>
-      <Nameplate text="Signal Processing" sub="Filter · ICA · epoching" position={[0, 1.85, 1.3]} />
-    </StationShell>
+    <StationZone id="signal-processing" position={SIGNAL_PROCESSING_POSITION}>
+      <Workstation />
+      <Screen size={[0.46, 0.3]} position={[-0.62, DESK_TOP_Y + 0.3, -0.28]} draw={drawRaw} intervalMs={100} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
+      <Screen size={[0.46, 0.3]} position={[0, DESK_TOP_Y + 0.32, -0.28]} draw={drawFiltered} intervalMs={100} frozen={reducedMotion} glow={PANEL.cyan} deskY={DESK_TOP_Y} />
+      <Screen size={[0.46, 0.3]} position={[0.62, DESK_TOP_Y + 0.3, -0.28]} draw={drawIcaEpoch} intervalMs={220} frozen={reducedMotion} glow={PANEL.amber} deskY={DESK_TOP_Y} />
+      <Nameplate text="Signal Processing" sub="Filter · ICA · epoching" position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+    </StationZone>
   );
 }
