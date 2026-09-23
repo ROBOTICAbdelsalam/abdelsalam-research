@@ -146,6 +146,84 @@ export function DeskLamp({ position = [-0.78, DESK_TOP_Y, -0.32] as [number, num
   );
 }
 
+// Three small procedural props, one per station that needs a visibly
+// different silhouette from the generic desk-and-monitor bundle — part of
+// the realism pass's "not six identical desks" fix. Positioned relative to
+// their station's own local origin (the desk's base-center), so a station
+// just places one as a sibling of <Workstation/>.
+
+// A GPU/workstation tower — the CNN-LSTM desk's deep-learning rig, sitting
+// on the floor beside the kneehole with vent slats and a status LED strip.
+export function GpuTower({ position = [-0.85, 0, 0.15] as [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position-y={0.24} castShadow receiveShadow>
+        <boxGeometry args={[0.19, 0.48, 0.42]} />
+        <meshStandardMaterial color="#15171d" roughness={0.4} metalness={0.5} />
+      </mesh>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <mesh key={i} position={[0.096, 0.1 + i * 0.07, 0.1]}>
+          <boxGeometry args={[0.004, 0.012, 0.24]} />
+          <meshStandardMaterial color="#0a0b0e" roughness={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0.096, 0.44, -0.1]}>
+        <boxGeometry args={[0.004, 0.01, 0.2]} />
+        <meshStandardMaterial color="#2dd4c8" emissive="#2dd4c8" emissiveIntensity={1.6} toneMapped={false} />
+      </mesh>
+      <pointLight position={[0.14, 0.44, -0.1]} color="#2dd4c8" intensity={2.4} distance={0.6} decay={2} />
+    </group>
+  );
+}
+
+// A control console — an angled panel with indicator buttons, giving the
+// Adaptive Decision station a monitoring-console silhouette rather than
+// another flat desk.
+export function ControlConsole({ position = [0.86, 0, 0.05] as [number, number, number], rotationY = 0 }) {
+  const leds = ["#5cf2a8", "#e0a23d", "#5cf2a8", "#2dd4c8", "#5cf2a8", "#e0575a"];
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <mesh position-y={0.09} castShadow>
+        <boxGeometry args={[0.05, 0.18, 0.22]} />
+        <meshStandardMaterial color="#1c2027" roughness={0.45} metalness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.19, 0]} rotation={[-0.5, 0, 0]} castShadow>
+        <boxGeometry args={[0.32, 0.02, 0.22]} />
+        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.55} />
+      </mesh>
+      {leds.map((color, i) => (
+        <mesh key={i} position={[-0.12 + (i % 3) * 0.12, 0.225 + Math.floor(i / 3) * 0.05, 0.07 - Math.floor(i / 3) * 0.03]} rotation={[-0.5, 0, 0]}>
+          <circleGeometry args={[0.012, 12]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.3} toneMapped={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// A small network switch / patch panel — the ROS 2 area's "control room"
+// detail, a row of blinking port LEDs.
+export function NetworkSwitch({ position = [0, 0, 0] as [number, number, number], rotationY = 0 }) {
+  const ports = mulberry32(21);
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <mesh castShadow>
+        <boxGeometry args={[0.34, 0.045, 0.2]} />
+        <meshStandardMaterial color="#181b21" roughness={0.45} metalness={0.45} />
+      </mesh>
+      {Array.from({ length: 8 }, (_, i) => {
+        const color = ports() > 0.35 ? "#5cf2a8" : "#232a36";
+        return (
+          <mesh key={i} position={[-0.14 + i * 0.04, 0.024, 0.07]}>
+            <boxGeometry args={[0.02, 0.006, 0.006]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={color === "#232a36" ? 0 : 1.4} toneMapped={false} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 // A complete, dressed workstation — desk + clutter + lamp + seating —
 // composed once here so every wall-row station (Signal Processing, Feature
 // Extraction, CNN-LSTM, Adaptive Decision, ROS 2, Gazebo) gets identical

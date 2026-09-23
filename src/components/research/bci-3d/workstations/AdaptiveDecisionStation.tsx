@@ -4,8 +4,8 @@ import { useCallback } from "react";
 import { ADAPTIVE_LAYER_STATE, GESTURES, LIVE_GATE_THRESHOLD } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useBciExperiment } from "../BCIExperimentProvider";
-import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
-import { ADAPTIVE_DECISION_POSITION } from "../layout";
+import { ControlConsole, DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
+import { ADAPTIVE_DECISION_POSITION, STATION_YAW } from "../layout";
 import { Nameplate } from "../Nameplate";
 import { Screen } from "../Screen";
 import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "../screenTextures";
@@ -57,8 +57,9 @@ export function AdaptiveDecisionStation() {
   }, []);
 
   return (
-    <StationZone id="adaptive-decision" position={ADAPTIVE_DECISION_POSITION}>
+    <StationZone id="adaptive-decision" position={ADAPTIVE_DECISION_POSITION} rotationY={STATION_YAW["adaptive-decision"] ?? 0}>
       <Workstation />
+      <ControlConsole />
       <Screen size={[0.52, 0.34]} position={[-0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawGate} intervalMs={140} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
       <Screen size={[0.52, 0.34]} position={[0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawAdaptive} intervalMs={0} frozen={reducedMotion} glow={PANEL.amber} deskY={DESK_TOP_Y} />
       <Nameplate text="Adaptive Decision" sub="Confidence gate · cold start" position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />

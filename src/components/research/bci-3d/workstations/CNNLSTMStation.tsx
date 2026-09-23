@@ -4,8 +4,8 @@ import { useCallback } from "react";
 import { GESTURES, LIVE_GATE_THRESHOLD, MODEL_NAME } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useBciExperiment } from "../BCIExperimentProvider";
-import { DESK_TOP_Y, Workstation } from "../environment/LabFurniture";
-import { CNN_LSTM_POSITION } from "../layout";
+import { DESK_TOP_Y, GpuTower, Workstation } from "../environment/LabFurniture";
+import { CNN_LSTM_POSITION, STATION_YAW } from "../layout";
 import { Nameplate } from "../Nameplate";
 import { Screen } from "../Screen";
 import { stageIndex } from "../state";
@@ -45,8 +45,9 @@ export function CNNLSTMStation() {
   );
 
   return (
-    <StationZone id="cnn-lstm" position={CNN_LSTM_POSITION}>
+    <StationZone id="cnn-lstm" position={CNN_LSTM_POSITION} rotationY={STATION_YAW["cnn-lstm"] ?? 0}>
       <Workstation />
+      <GpuTower />
       <Screen size={[0.52, 0.3]} position={[-0.35, DESK_TOP_Y + 0.3, -0.28]} draw={drawChain} intervalMs={90} frozen={reducedMotion} glow={PANEL.accent} deskY={DESK_TOP_Y} />
       <Screen size={[0.52, 0.34]} position={[0.35, DESK_TOP_Y + 0.32, -0.28]} draw={drawBars} intervalMs={200} frozen={reducedMotion} glow={PANEL.cyan} deskY={DESK_TOP_Y} />
       <Nameplate text="CNN-LSTM" sub="Motor-imagery classification" position={[0, 1.85, 0.55]} accent={active ? "#2dd4c8" : "#5b9dff"} />

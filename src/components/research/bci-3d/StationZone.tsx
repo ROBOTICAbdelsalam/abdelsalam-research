@@ -25,10 +25,12 @@ export type StationZoneProps = {
   position: Vec3;
   /** Hit-volume footprint [width, height, depth], centered on `position`, base at floor level. */
   size?: [number, number, number];
+  /** Yaw applied to the whole station (desk, screens, lamp, stool, nameplate) as one rigid assembly — see layout.ts's STATION_YAW. */
+  rotationY?: number;
   children?: ReactNode;
 };
 
-export function StationZone({ id, position, size = [2.4, 2.2, 2.0], children }: StationZoneProps) {
+export function StationZone({ id, position, size = [2.4, 2.2, 2.0], rotationY = 0, children }: StationZoneProps) {
   const { hoverStation, focusStation } = useBciExperiment();
   const { gl } = useThree();
 
@@ -53,7 +55,7 @@ export function StationZone({ id, position, size = [2.4, 2.2, 2.0], children }: 
   );
 
   return (
-    <group position={position as unknown as [number, number, number]}>
+    <group position={position as unknown as [number, number, number]} rotation-y={rotationY}>
       <mesh position={[0, size[1] / 2, 0]} onPointerOver={onOver} onPointerOut={onOut} onClick={onClick}>
         <boxGeometry args={size} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />

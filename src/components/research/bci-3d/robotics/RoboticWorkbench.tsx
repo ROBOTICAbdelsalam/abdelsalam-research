@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { GESTURES, HONESTY_LABELS } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { useBciExperiment } from "../BCIExperimentProvider";
@@ -70,6 +70,47 @@ function Workbench() {
   );
 }
 
+// Hazard-stripe floor marking — a real robotics workcell's safety
+// boundary, built from alternating yellow/black tape segments around the
+// bench footprint rather than a literal fence (which would block camera
+// sightlines this close to the hand).
+function SafetyBoundary() {
+  const segments = useMemo(() => {
+    const w = 2.1;
+    const d = 1.7;
+    const half = { w: w / 2, d: d / 2 };
+    const perimeter: { pos: [number, number]; len: number; rot: number }[] = [
+      { pos: [0, -half.d], len: w, rot: 0 },
+      { pos: [0, half.d], len: w, rot: 0 },
+      { pos: [-half.w, 0], len: d, rot: Math.PI / 2 },
+      { pos: [half.w, 0], len: d, rot: Math.PI / 2 },
+    ];
+    const out: { x: number; z: number; rot: number; color: string }[] = [];
+    perimeter.forEach(({ pos, len, rot }) => {
+      const step = 0.24;
+      const count = Math.round(len / step);
+      for (let i = 0; i < count; i++) {
+        const t = (i + 0.5) / count - 0.5;
+        const dx = rot === 0 ? t * len : 0;
+        const dz = rot === 0 ? 0 : t * len;
+        out.push({ x: pos[0] + dx, z: pos[1] + dz, rot, color: i % 2 === 0 ? "#e0a23d" : "#14171d" });
+      }
+    });
+    return out;
+  }, []);
+
+  return (
+    <group position-y={0.004}>
+      {segments.map((s, i) => (
+        <mesh key={i} position={[s.x, 0, s.z]} rotation={[-Math.PI / 2, 0, s.rot]}>
+          <planeGeometry args={[0.2, 0.09]} />
+          <meshStandardMaterial color={s.color} roughness={0.75} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 export function RoboticWorkbench() {
   const { stage, phase, command } = useBciExperiment();
   const reducedMotion = useReducedMotion();
@@ -95,6 +136,7 @@ export function RoboticWorkbench() {
   return (
     <StationZone id="hand" position={HAND_POSITION} size={[2.4, 2.2, 2.0]}>
       <Workbench />
+      <SafetyBoundary />
       <group position={[0.05, BENCH_TOP_Y + 0.06, -0.05]}>
         <RoboticHand />
       </group>

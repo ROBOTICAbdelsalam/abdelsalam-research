@@ -1,13 +1,22 @@
 import type { PipelineStageId } from "@/data/bci-experiment";
 
-// Spatial layout for the BCI digital-twin laboratory — REBUILT for the
-// realism pass (see the physical-lab rebuild notes). Previous layout: a
-// front-to-back "pipeline spine" with stations as isolated glowing circular
-// pads. New layout: a real open-plan lab room, workstations against one
-// back wall in pipeline left-to-right order (matching a visitor's natural
-// reading direction), a central BCI visualization as a walk-up landmark on
-// the open floor, and a separate robotics workcell island — not a corridor,
-// not a ring of platforms. Units are meters, Y up, floor at y = 0.
+// Spatial layout for the BCI digital-twin laboratory — REBUILT again for
+// the zone-based realism pass. The previous version put every workstation
+// in a single straight row along one wall (technically "not a corridor,
+// not a ring of platforms", but still visually just a row of identical
+// desks — the single biggest complaint about that version). This version
+// lays out a real floor plan with distinct AREAS, matching how an actual
+// lab would be organized by function, not by pipeline index:
+//
+//   BACK-LEFT:    EEG acquisition room (its own alcove, partitioned off)
+//   BACK-CENTER:  AI/BCI cluster — four workstations facing inward around
+//                 the central brain visualization, not a row
+//   MID-FLOOR:    ROS 2 + Gazebo robotics control area
+//   FRONT:        the robotics workcell (the physical robotic hand)
+//
+// A visitor's camera path (EEG → AI → Adaptive → ROS2 → Robot) now moves
+// through physically different regions of one coherent room, not along a
+// single wall. Units are meters, Y up, floor at y = 0.
 
 export type Vec3 = readonly [number, number, number];
 
@@ -21,28 +30,33 @@ export type StationId =
   | "gazebo"
   | "hand";
 
-// Desk-row stations sit against the back wall (z = DESK_ROW_Z), left to
-// right in pipeline order. Desks are real-world-scale (the Metal Office
-// Desk GLB is 2m wide), so a 3m pitch gives a 1m walking gap between them.
-export const DESK_ROW_Z = -7.0;
-const DESK_PITCH = 3.0;
-const DESK_ROW_X0 = -10.5; // EEG desk's x; each later station adds DESK_PITCH
+// --- EEG room (back-left alcove) ---
+export const EEG_POSITION: Vec3 = [-6.8, 0, -8.8];
 
-export const EEG_POSITION: Vec3 = [DESK_ROW_X0, 0, DESK_ROW_Z];
-export const SIGNAL_PROCESSING_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH, 0, DESK_ROW_Z];
-export const FEATURE_EXTRACTION_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 2, 0, DESK_ROW_Z];
-export const CNN_LSTM_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 3, 0, DESK_ROW_Z];
-export const ADAPTIVE_DECISION_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 4, 0, DESK_ROW_Z];
-export const ROS2_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 5, 0, DESK_ROW_Z];
-export const GAZEBO_POSITION: Vec3 = [DESK_ROW_X0 + DESK_PITCH * 6, 0, DESK_ROW_Z];
+// --- AI/BCI cluster (back-center): four desks in two rows, ALL facing +Z
+// (the open floor a visitor approaches from) — the central brain sits in
+// the gap between the rows as a landmark, not something the desks turn to
+// face. (An earlier version rotated the front row 180° to face the core;
+// that put their screens/nameplates back-to-camera from every normal
+// viewing angle, which — since a flat plane's texture reads mirrored from
+// behind even with double-sided rendering — made their labels illegible.
+// Keeping every desk on a consistent, camera-facing orientation avoids
+// that outright rather than trying to author two-sided nameplate/screen
+// textures.) ---
+export const CORE_POSITION: Vec3 = [2.8, 0, -7.0];
+export const SIGNAL_PROCESSING_POSITION: Vec3 = [0.3, 0, -8.6];
+export const FEATURE_EXTRACTION_POSITION: Vec3 = [5.3, 0, -8.6];
+export const CNN_LSTM_POSITION: Vec3 = [0.3, 0, -5.4];
+export const ADAPTIVE_DECISION_POSITION: Vec3 = [5.3, 0, -5.4];
 
-// The central BCI visualization: a walk-up landmark on the open floor,
-// roughly centered over the desk row, well forward of the wall.
-export const CORE_POSITION: Vec3 = [-2.5, 0, -2.4];
+// --- Robotics control area (mid-floor): ROS 2 and Gazebo face each other
+// across the aisle, with a small equipment rack between them. ---
+export const ROS2_POSITION: Vec3 = [-2.6, 0, -1.8];
+export const GAZEBO_POSITION: Vec3 = [2.6, 0, -1.8];
 
-// The robotics workcell: a separate island to the right, off the wall row
-// entirely — "FAR RIGHT: robotic hand / robot workcell".
-export const HAND_POSITION: Vec3 = [9.6, 0, 1.4];
+// --- Robotics workcell (front): the physical robotic hand, closest to a
+// visitor entering the room. ---
+export const HAND_POSITION: Vec3 = [0, 0, 4.2];
 
 export const STATION_POSITIONS: Record<StationId, Vec3> = {
   eeg: EEG_POSITION,
@@ -55,20 +69,23 @@ export const STATION_POSITIONS: Record<StationId, Vec3> = {
   hand: HAND_POSITION,
 };
 
+// Per-station yaw, applied to the whole StationZone group (desk, screens,
+// lamp, stool and nameplate rotate together as one rigid assembly — see
+// StationZone.tsx). Every current station keeps its default +Z facing;
+// this stays as an explicit, empty override point rather than being
+// deleted, since a future zone reshuffle will likely need it again.
+export const STATION_YAW: Partial<Record<StationId, number>> = {};
+
 export const ROOM = {
-  halfWidth: 12.6,
-  halfDepth: 8.2,
-  centerZ: -1.0,
-  // A real institutional-lab ceiling height, not a warehouse — see the
-  // lighting rebuild for how fixture intensities were recalibrated to this
-  // much shorter throw distance than the previous 6m version.
+  halfWidth: 10,
+  halfDepth: 10.5,
+  centerZ: -1.2,
   wallHeight: 3.4,
 } as const;
 
-// Yaw (radians) so a group's default forward (-Z) faces a point. Still used
-// by the central core and the robotics workcell (which face inward, toward
-// the room, from off-wall positions) — the desk-row stations no longer need
-// it, since they all face the same way (+Z, into the room) by construction.
+// Yaw (radians) so a group's default forward (-Z) faces a point. Used by
+// the central core and any other object that needs to aim at a specific
+// point rather than using a fixed station yaw.
 export function facing(from: Vec3, to: Vec3) {
   return Math.atan2(from[0] - to[0], from[2] - to[2]);
 }
@@ -86,28 +103,18 @@ export const CAMERA_MODES: readonly { id: CameraMode; label: string }[] = [
 
 export type CameraShot = { position: Vec3; target: Vec3 };
 
-// Human eye-level shots — a visitor standing inside the lab, not a drone or
-// a strategy-game overhead view. Kept comfortably inside ROOM's bounds;
-// BCICameraRig's hard target/position clamp is the actual safety net for
-// free orbit/pan/zoom (see that file), so these don't need the exhaustive
-// per-azimuth derivation the previous corridor layout required — this room
-// is wide and shallow, not long and narrow, so the clamp alone is enough.
+// Human eye-level shots — a visitor standing inside the lab, moving
+// between its distinct areas, not a drone or a strategy-game overhead
+// view. BCICameraRig's hard target/position clamp (see that file) is the
+// actual safety net for free orbit/pan/zoom, so these just need to be
+// reasonable starting points inside ROOM's bounds.
 export const CAMERA_SHOTS: Record<CameraMode, CameraShot> = {
-  overview: { position: [-1, 2.5, 6.2], target: [-1, 1.35, -3.2] },
-  eeg: { position: [-8.6, 1.95, -3.1], target: [DESK_ROW_X0, 1.35, DESK_ROW_Z - 0.6] },
-  ai: {
-    position: [DESK_ROW_X0 + DESK_PITCH * 2, 2.1, -1.6],
-    target: [DESK_ROW_X0 + DESK_PITCH * 2, 1.35, DESK_ROW_Z - 0.3],
-  },
-  adaptive: {
-    position: [ADAPTIVE_DECISION_POSITION[0] - 1.2, 2.0, -1.9],
-    target: [ADAPTIVE_DECISION_POSITION[0], 1.35, DESK_ROW_Z - 0.3],
-  },
-  ros2: {
-    position: [ROS2_POSITION[0] - 0.8, 2.1, -1.6],
-    target: [ROS2_POSITION[0], 1.35, DESK_ROW_Z - 0.3],
-  },
-  robot: { position: [7.8, 2.1, 3.6], target: [HAND_POSITION[0], 1.3, HAND_POSITION[2]] },
+  overview: { position: [7.6, 3.4, 7.4], target: [0, 1.3, -4] },
+  eeg: { position: [-4.3, 1.95, -6.6], target: [-6.8, 1.4, -8.6] },
+  ai: { position: [2.8, 2.9, -2.9], target: [2.8, 1.4, -7.0] },
+  adaptive: { position: [4.0, 2.0, -3.1], target: [5.3, 1.35, -5.4] },
+  ros2: { position: [-3.6, 2.0, 0.9], target: [-2.6, 1.35, -1.8] },
+  robot: { position: [0, 2.2, 7.4], target: [0, 1.3, 4.2] },
 };
 
 // Which camera preset the guided tour switches to while a given pipeline

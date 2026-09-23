@@ -36,7 +36,7 @@ export type AssetSource = {
   usedBy: readonly string[];
 } & (
   | {
-      kind: "glb";
+      kind: "REAL_GLB";
       path: string;
       license: string;
       licenseUrl: string;
@@ -47,7 +47,7 @@ export type AssetSource = {
       notes?: string;
     }
   | {
-      kind: "procedural";
+      kind: "PROCEDURAL";
       /** Why no real asset is used — kept honest per the fallback contract (section 29). */
       reason: string;
     }
@@ -57,7 +57,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   // --- Real GLB assets, newly sourced for this rebuild (Poly Haven, CC0) ---
   {
     id: "lab-desk",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "furniture",
     path: "/models/laboratory/metal_office_desk/metal_office_desk_1k.gltf",
     realWorldReference: "Dark metal research/office desk",
@@ -69,7 +69,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "lab-stool",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "furniture",
     path: "/models/laboratory/metal_stool_02/metal_stool_02_1k.gltf",
     realWorldReference: "Simple metal-frame lab stool (workstation seating)",
@@ -81,7 +81,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "equipment-rack",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "furniture",
     path: "/models/laboratory/steel_frame_shelves_02/steel_frame_shelves_02_1k.gltf",
     realWorldReference: "Steel-frame equipment/server shelving",
@@ -93,7 +93,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "wall-clock",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "decor",
     path: "/models/laboratory/wall_clock/wall_clock_1k.gltf",
     realWorldReference: "Wall-mounted analog clock (lab wall detail)",
@@ -105,7 +105,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "power-panel",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "electronics",
     path: "/models/laboratory/power_box_01/power_box_01_1k.gltf",
     realWorldReference: "Wall-mounted power/breaker distribution panel",
@@ -119,7 +119,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   // --- Real GLB assets already in the repo, reused from the Hero scene ---
   {
     id: "bci-core-brain",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "visualization",
     path: "/models/brain.glb",
     realWorldReference: "Anatomical brain — the central BCI visualization's core mesh",
@@ -134,7 +134,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "eeg-participant-head",
-    kind: "glb",
+    kind: "REAL_GLB",
     category: "human",
     path: "/models/bust-head.glb",
     realWorldReference: "Human head & shoulders bust — the EEG participant",
@@ -151,7 +151,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   // --- Procedural — no suitable licensed real-world asset exists ---
   {
     id: "eeg-cap",
-    kind: "procedural",
+    kind: "PROCEDURAL",
     category: "human",
     realWorldReference: "64-channel EEG electrode cap",
     reason:
@@ -160,7 +160,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "eeg-amplifier",
-    kind: "procedural",
+    kind: "PROCEDURAL",
     category: "electronics",
     realWorldReference: "EEG amplifier / acquisition box",
     reason: "Same as eeg-cap — no suitable free-licensed asset exists for this specific hardware class.",
@@ -168,7 +168,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "robotic-hand",
-    kind: "procedural",
+    kind: "PROCEDURAL",
     category: "electronics",
     realWorldReference: "Five-finger research robotic hand",
     reason:
@@ -177,7 +177,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "lab-monitor",
-    kind: "procedural",
+    kind: "PROCEDURAL",
     category: "electronics",
     realWorldReference: "Workstation flat-panel monitor",
     reason:
@@ -186,7 +186,7 @@ export const BCI_ASSETS: readonly AssetSource[] = [
   },
   {
     id: "keyboard-mouse",
-    kind: "procedural",
+    kind: "PROCEDURAL",
     category: "electronics",
     realWorldReference: "Keyboard and mouse",
     reason: "Small, cheap desk-clutter geometry; not worth the download weight of a real asset at this screen size.",
