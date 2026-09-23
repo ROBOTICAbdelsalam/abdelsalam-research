@@ -4,15 +4,18 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { ROOM } from "../layout";
 import { GlbProp } from "../assets/AssetLoader";
-import { EquipmentRack } from "./LabFurniture";
+import { EquipmentRack, GlassPartition, LabPlant } from "./LabFurniture";
 
-// The physical room shell — REBUILT again for the zone-based layout. Adds
-// a partial partition wall between the EEG room and the AI/BCI cluster (so
-// the EEG area reads as its own alcove, not just another spot along an
-// open floor — see layout.ts's zone plan), and repositions every wall
-// fixture/rack for the new floor plan. Still: a plain rough-industrial
-// floor with no grid, matte painted walls, and physical ceiling fixtures a
-// visitor could point to.
+// The physical room shell — REBUILT again for the visual-reconstruction
+// pass's new zone layout (see layout.ts's header comment for why the
+// positions moved). Fixture positions now match the new zones; the old
+// single opaque EEG partition wall is replaced with glass-walled "clean
+// room" partitions set back near the side walls — visible depth behind
+// the working floor rather than a divider that blocks it, per the
+// reference's background treatment — plus scattered plants and an extra
+// equipment rack for the density the reference's background carries.
+// Still: a plain rough-industrial floor with no grid, matte painted
+// walls, and physical ceiling fixtures a visitor could point to.
 
 const FLOOR_COLOR = "#0e1013";
 const WALL_COLOR = "#1a1e26";
@@ -21,19 +24,22 @@ export function RealisticLab() {
   const floorGeometry = useMemo(() => new THREE.PlaneGeometry(ROOM.halfWidth * 2, ROOM.halfDepth * 2), []);
 
   // Ceiling fixtures placed over each zone rather than a uniform grid —
-  // EEG room, the four cluster desks (two fixtures), the ROS2/Gazebo
-  // aisle, and the robotics workcell, plus two general-fill fixtures over
-  // the open floor between zones.
+  // EEG, ROS2, the AI cluster around the Core, Gazebo, and the robotics
+  // workcell, plus fill fixtures over the open floor between them. Kept in
+  // sync with layout.ts's current station positions.
   const fixtures: [number, number][] = [
-    [-6.8, -8.6],
-    [0.8, -7.8],
-    [5.0, -7.8],
-    [-2.6, -1.6],
-    [2.6, -1.6],
-    [0, 4.0],
-    [-6, -3.2],
-    [6.5, -5],
-    [0, 0.8],
+    [-8.3, 3.2],
+    [-5.2, 0.4],
+    [-3.4, -7.8],
+    [0.2, -6.0],
+    [2.6, -7.2],
+    [2.6, -4.2],
+    [5.4, -5.6],
+    [4.6, -1.2],
+    [8.5, 1.0],
+    [8.5, -2.5],
+    [-1.5, -3.5],
+    [0, -1.5],
   ];
 
   return (
@@ -60,21 +66,29 @@ export function RealisticLab() {
         </mesh>
       ))}
 
-      {/* Partition between the EEG room and the AI/BCI cluster — a real
-          divider (not full height, not full depth), so the EEG area reads
-          as its own alcove rather than just another spot on an open floor.
-          Kept short and tucked against the back wall specifically so it
-          doesn't crowd the EEG camera preset, which sits well forward of
-          it (z ≈ -6.6) — the divider only needs to read as a boundary near
-          the back of both alcoves, not run the full depth of the room. */}
-      <mesh position={[-3.3, 1.05, -10.0]} castShadow receiveShadow>
-        <boxGeometry args={[0.16, 2.1, 3.2]} />
-        <meshStandardMaterial color={WALL_COLOR} roughness={0.8} metalness={0.06} />
-      </mesh>
-      <mesh position={[-3.3, 2.14, -10.0]}>
-        <boxGeometry args={[0.18, 0.03, 3.2]} />
-        <meshStandardMaterial color="#3a4150" roughness={0.35} metalness={0.75} />
-      </mesh>
+      {/* Glass "clean room" partitions near the back wall, left and right —
+          the reference's background depth cue: a dimly lit room visible
+          beyond glass rather than a blank painted wall. Set well back so
+          they never cross a camera preset's sightline to its own station,
+          and positioned asymmetrically (left near EEG, right past the
+          hand) to bracket the whole floor rather than centering on one
+          zone. */}
+      <GlassPartition position={[-7.4, 0, -10.1]} width={4.6} height={2.7} />
+      <GlassPartition position={[9.0, 0, -6.5]} rotationY={Math.PI / 2} width={6.2} height={2.7} />
+      {/* A little equipment glimpsed behind the glass, so it reads as an
+          occupied room rather than an empty glass box. Both partitions'
+          Z-ranges stay well clear of the hand workcell (z ≈ 1.0) and
+          Gazebo (z ≈ -1.2) so neither crosses a working station. */}
+      <EquipmentRack position={[-8.6, 0, -9.8]} rotationY={0.3} />
+      <LabPlant position={[-6.0, 0, -9.9]} scale={1.3} />
+      <LabPlant position={[9.5, 0, -9.0]} scale={1.4} />
+      <LabPlant position={[9.5, 0, -4.5]} scale={1.2} />
+      {/* Plants and small equipment on the working floor itself, near
+          station edges — not just behind the glass — per the reference's
+          background-density notes. */}
+      <LabPlant position={[-9.0, 0, -4.0]} scale={1.1} />
+      <LabPlant position={[7.0, 0, -8.2]} scale={1.15} />
+      <LabPlant position={[-0.3, 0, -1.5]} scale={1.0} />
 
       {/* Low skirting strip, brushed aluminum, ties the walls to the floor. */}
       {[-1, 1].map((side) => (
@@ -131,9 +145,9 @@ export function RealisticLab() {
 
       {/* One rack right at the robotics control aisle (the "small rack"
           section 06 calls for), plus two against the perimeter for depth. */}
-      <EquipmentRack position={[-4.4, 0, -1.5]} rotationY={Math.PI / 2} />
+      <EquipmentRack position={[-6.9, 0, -1.4]} rotationY={Math.PI / 2} />
       <EquipmentRack position={[-ROOM.halfWidth + 0.35, 0, -9]} rotationY={Math.PI / 2} />
-      <EquipmentRack position={[ROOM.halfWidth - 0.35, 0, -6.5]} rotationY={-Math.PI / 2} />
+      <EquipmentRack position={[ROOM.halfWidth - 0.35, 0, -1.0]} rotationY={-Math.PI / 2} />
     </group>
   );
 }

@@ -117,6 +117,63 @@ function Workbench() {
           <meshStandardMaterial color="#c23b3f" roughness={0.4} metalness={0.15} />
         </mesh>
       </group>
+
+      {/* Small hand tools on the bench — a screwdriver and a hex key, the
+          "real scientist was just here" detail the reference's bench
+          carries. Two objects, not a toolbox spilled open. */}
+      <group position={[-0.22, BENCH_TOP_Y + 0.026, 0.22]} rotation-y={0.4}>
+        <mesh rotation-z={Math.PI / 2} castShadow>
+          <cylinderGeometry args={[0.006, 0.006, 0.16, 8]} />
+          <meshStandardMaterial color="#e0a23d" roughness={0.5} metalness={0.2} />
+        </mesh>
+        <mesh position={[-0.1, 0, 0]} rotation-z={Math.PI / 2} castShadow>
+          <cylinderGeometry args={[0.009, 0.009, 0.045, 8]} />
+          <meshStandardMaterial color="#1c2027" roughness={0.6} />
+        </mesh>
+      </group>
+      <mesh position={[-0.14, BENCH_TOP_Y + 0.028, 0.3]} rotation={[0, 0.9, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.0035, 0.0035, 0.09, 6]} />
+        <meshStandardMaterial {...STEEL} />
+      </mesh>
+    </group>
+  );
+}
+
+// Rolling tool-storage cabinet beside the bench — a stack of drawers with
+// a contrasting accent-red front, the "industrial workcell" silhouette the
+// reference's bench keeps to its right. Bolted to the floor visually
+// (base + castors), not floating.
+function ToolChest() {
+  return (
+    <group position={[0.92, 0, 0.05]}>
+      <mesh position-y={0.5} castShadow receiveShadow>
+        <boxGeometry args={[0.5, 1.0, 0.55]} />
+        <meshStandardMaterial color="#1c2027" roughness={0.4} metalness={0.55} />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <group key={i} position={[0, 0.18 + i * 0.2, 0.278]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.44, 0.16, 0.01]} />
+            <meshStandardMaterial color="#9c2b30" roughness={0.4} metalness={0.35} />
+          </mesh>
+          <mesh position={[0, 0, 0.008]}>
+            <boxGeometry args={[0.14, 0.014, 0.01]} />
+            <meshStandardMaterial color="#2a2f38" roughness={0.4} metalness={0.6} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position-y={1.005} castShadow>
+        <boxGeometry args={[0.54, 0.03, 0.6]} />
+        <meshStandardMaterial color="#14171d" roughness={0.4} metalness={0.5} />
+      </mesh>
+      {[-1, 1].map((sx) =>
+        [-1, 1].map((sz) => (
+          <mesh key={`${sx}-${sz}`} position={[sx * 0.21, 0.03, sz * 0.24]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.06, 12]} />
+            <meshStandardMaterial color="#0c0d10" roughness={0.75} />
+          </mesh>
+        )),
+      )}
     </group>
   );
 }
@@ -185,10 +242,24 @@ export function RoboticWorkbench() {
   );
 
   return (
-    <StationZone id="hand" position={HAND_POSITION} size={[2.4, 2.2, 2.0]}>
+    <StationZone id="hand" position={HAND_POSITION} size={[3.0, 2.6, 2.2]}>
       <Workbench />
       <SafetyBoundary />
-      <group position={[0.05, BENCH_TOP_Y + 0.06, -0.05]}>
+      <ToolChest />
+      {/* Vertical accent light pillar behind the hand — the reference's
+          rim-lit backdrop that makes the hand read as the room's second
+          hero object even from a distance, not a plain empty wall behind
+          it. A thin emissive bar, not a spotlight cone (cheap, no extra
+          shadow-casting light). */}
+      <mesh position={[-0.5, 1.3, -0.55]}>
+        <boxGeometry args={[0.05, 2.2, 0.05]} />
+        <meshStandardMaterial color="#dce6ff" emissive="#5b9dff" emissiveIntensity={2.2} toneMapped={false} />
+      </mesh>
+      <pointLight position={[-0.5, 1.4, -0.4]} color="#5b9dff" intensity={7} distance={2.6} decay={2} />
+      {/* The hand assembly is scaled up from its own authored (hand-sized)
+          geometry — the reference shows it as a large, unmistakable hero
+          object, not a small prop on a big bench. */}
+      <group position={[0.05, BENCH_TOP_Y + 0.06, -0.05]} scale={1.55}>
         <RoboticHand />
       </group>
       <Screen
@@ -201,8 +272,8 @@ export function RoboticWorkbench() {
         glow={PANEL.cyan}
         deskY={BENCH_TOP_Y}
       />
-      <Nameplate text="Robotic Hand" sub={`Gesture: ${label}`} position={[0, 1.95, 0.42]} accent={active ? "#2dd4c8" : "#5b9dff"} />
-      <Nameplate text={HONESTY_LABELS.gazebo} position={[0, 1.68, 0.42]} width={1.85} color="#eaf1ff" accent="#2dd4c8" />
+      <Nameplate text="Robotic Hand" sub={`Gesture: ${label}`} position={[0, 2.15, 0.42]} accent={active ? "#2dd4c8" : "#5b9dff"} />
+      <Nameplate text={HONESTY_LABELS.gazebo} position={[0, 1.85, 0.42]} width={1.85} color="#eaf1ff" accent="#2dd4c8" />
     </StationZone>
   );
 }

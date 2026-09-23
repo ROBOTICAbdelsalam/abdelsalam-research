@@ -231,6 +231,76 @@ export function IndustrialComputer({ position = [0, 0, 0] as [number, number, nu
   );
 }
 
+// A small potted plant — cheap, high-value background atmosphere the
+// reference leans on heavily (several pots scattered through the room).
+// One shared shape (pot + a handful of angled leaf blades), reused at
+// several spots rather than authored per-instance.
+export function LabPlant({ position = [0, 0, 0] as [number, number, number], scale = 1 }) {
+  const leaves = 6;
+  return (
+    <group position={position} scale={scale}>
+      <mesh position-y={0.11} castShadow receiveShadow>
+        <cylinderGeometry args={[0.1, 0.085, 0.22, 12]} />
+        <meshStandardMaterial color="#2a2f38" roughness={0.55} metalness={0.15} />
+      </mesh>
+      {Array.from({ length: leaves }, (_, i) => {
+        const a = (i / leaves) * Math.PI * 2;
+        const lean = 0.55 + (i % 3) * 0.08;
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 0.05, 0.22 + i * 0.015, Math.sin(a) * 0.05]}
+            rotation={[lean, a, 0]}
+            castShadow
+          >
+            <coneGeometry args={[0.045, 0.38 + (i % 2) * 0.08, 6, 1, true]} />
+            <meshStandardMaterial color={i % 2 === 0 ? "#2f5c3f" : "#356b45"} roughness={0.7} side={THREE.DoubleSide} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// A tall glass partition panel with a dark metal frame — the "clean room"
+// divider the reference uses to give the background real depth (a
+// glass-walled area visible beyond it) without fully enclosing a room.
+// Thin, floor-to-near-ceiling, double-sided.
+export function GlassPartition({
+  position = [0, 0, 0] as [number, number, number],
+  rotationY = 0,
+  width = 3.2,
+  height = 2.6,
+}) {
+  const mullionCount = Math.round(width / 1.05) + 1;
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <mesh position-y={height / 2} castShadow receiveShadow>
+        <boxGeometry args={[width, height, 0.05]} />
+        <meshPhysicalMaterial color="#c8d6f0" roughness={0.05} metalness={0} transparent opacity={0.12} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Frame: a base rail, a top rail, and evenly spaced mullions. */}
+      <mesh position-y={0.02}>
+        <boxGeometry args={[width, 0.04, 0.08]} />
+        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.6} />
+      </mesh>
+      <mesh position-y={height - 0.02}>
+        <boxGeometry args={[width, 0.04, 0.08]} />
+        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.6} />
+      </mesh>
+      {Array.from({ length: mullionCount }, (_, i) => {
+        const t = mullionCount > 1 ? i / (mullionCount - 1) - 0.5 : 0;
+        return (
+          <mesh key={i} position={[t * width, height / 2, 0]}>
+            <boxGeometry args={[0.035, height, 0.06]} />
+            <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.6} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 export function NetworkSwitch({ position = [0, 0, 0] as [number, number, number], rotationY = 0 }) {
   const ports = mulberry32(21);
   return (
