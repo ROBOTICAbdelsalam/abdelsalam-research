@@ -46,11 +46,13 @@ export type StationId =
 
 // --- EEG room (left, brought well forward of the AI cluster) — the
 // reference's participant is a large, close, foreground-left figure, not
-// a small distant one; pulling this station toward the camera (along
-// this specific oblique overview angle, moving toward +Z also pushes its
-// screen position further left, not right — see the header note above)
-// gets both the correct screen side AND real prominence in one move. ---
-export const EEG_POSITION: Vec3 = [-8.3, 0, 3.2];
+// a small distant one; pulling this station toward the camera gets both
+// the correct screen side AND real prominence in one move. Re-solved
+// again for the overview camera's second revision (see that shot's own
+// comment below) — a front-on, eye-level, much closer shot needed every
+// station's position re-checked against its actual field of view, not
+// just its left/right ordering. ---
+export const EEG_POSITION: Vec3 = [-3.9, 0, -0.2];
 
 // --- AI/BCI cluster, gathered around the Core rather than in a back row —
 // all still facing +Z (see the mirrored-nameplate note this comment used
@@ -60,18 +62,17 @@ export const EEG_POSITION: Vec3 = [-8.3, 0, 3.2];
 export const CORE_POSITION: Vec3 = [0.2, 0, -6.0];
 export const SIGNAL_PROCESSING_POSITION: Vec3 = [-3.4, 0, -7.8];
 export const FEATURE_EXTRACTION_POSITION: Vec3 = [2.6, 0, -7.2];
-export const CNN_LSTM_POSITION: Vec3 = [2.6, 0, -4.2];
+export const CNN_LSTM_POSITION: Vec3 = [2.5, 0, -5.0];
 export const ADAPTIVE_DECISION_POSITION: Vec3 = [5.4, 0, -5.6];
 
-// --- Robotics control area: ROS 2 (left, paired with EEG, also brought
-// forward for the same reason) and Gazebo (center-right, paired with the
-// hand workcell it simulates). ---
-export const ROS2_POSITION: Vec3 = [-5.2, 0, 0.4];
-export const GAZEBO_POSITION: Vec3 = [4.6, 0, -1.2];
+// --- Robotics control area: ROS 2 (left, paired with EEG) and Gazebo
+// (center-right, paired with the hand workcell it simulates). ---
+export const ROS2_POSITION: Vec3 = [-3.6, 0, -2.9];
+export const GAZEBO_POSITION: Vec3 = [4.4, 0, -2.4];
 
 // --- Robotics workcell (right): the physical robotic hand — the second
 // major visual anchor, closest to the overview camera. ---
-export const HAND_POSITION: Vec3 = [8.5, 0, 1.0];
+export const HAND_POSITION: Vec3 = [5.3, 0, 0.3];
 
 export const STATION_POSITIONS: Record<StationId, Vec3> = {
   eeg: EEG_POSITION,
@@ -127,20 +128,26 @@ export type CameraShot = { position: Vec3; target: Vec3 };
 // `overview` is UNCHANGED from before this pass — it is the one shot the
 // visual-reconstruction spec requires to keep working exactly as it is;
 // every station position above was solved to read correctly *through*
-// this fixed shot, not the other way around. The other five shots below
-// DID move, but only by construction: each is its station's old shot
-// re-centered on that station's new position, keeping the exact same
-// relative offset (viewing angle, height, distance) it already had. A
-// preset camera pointed at a station that just moved several meters would
-// otherwise be aimed at empty floor — this keeps all five working exactly
-// as verified before, just re-aimed at where their station now stands.
+// this fixed shot, not the other way around — REVISED again this pass: a
+// much closer, lower, front-on eye-level shot replaces the previous steep
+// elevated diagonal, matching the reference's actual perspective far more
+// closely (that diagonal view left most of the frame as empty floor/
+// ceiling; this one fills it). ai/adaptive are untouched below since
+// CORE_POSITION/ADAPTIVE_DECISION_POSITION didn't move this round; the
+// other four DID move, but only by construction: each is its station's
+// previous shot re-centered on that station's new position, keeping the
+// exact same relative offset (viewing angle, height, distance) it already
+// had. A preset camera pointed at a station that just moved several
+// meters would otherwise be aimed at empty floor — this keeps all five
+// working exactly as verified before, just re-aimed at where their
+// station now stands.
 export const CAMERA_SHOTS: Record<CameraMode, CameraShot> = {
-  overview: { position: [9.8, 4.0, 8.5], target: [-4.2, 1.5, -5.6] },
-  eeg: { position: [-5.8, 1.95, 5.4], target: [-8.3, 1.4, 3.4] },
+  overview: { position: [1.0, 2.1, 8.8], target: [0.3, 1.6, -5.5] },
+  eeg: { position: [-1.4, 1.95, 2.0], target: [-3.9, 1.4, 0.0] },
   ai: { position: [0.2, 2.9, -1.9], target: [0.2, 1.4, -6.0] },
   adaptive: { position: [4.1, 2.0, -3.3], target: [5.4, 1.35, -5.6] },
-  ros2: { position: [-6.2, 2.0, 3.1], target: [-5.2, 1.35, 0.4] },
-  robot: { position: [8.5, 2.2, 4.2], target: [8.5, 1.3, 1.0] },
+  ros2: { position: [-4.6, 2.0, -0.2], target: [-3.6, 1.35, -2.9] },
+  robot: { position: [5.3, 2.2, 3.5], target: [5.3, 1.3, 0.3] },
 };
 
 // Which camera preset the guided tour switches to while a given pipeline

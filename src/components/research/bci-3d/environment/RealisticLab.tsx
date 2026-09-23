@@ -28,16 +28,16 @@ export function RealisticLab() {
   // workcell, plus fill fixtures over the open floor between them. Kept in
   // sync with layout.ts's current station positions.
   const fixtures: [number, number][] = [
-    [-8.3, 3.2],
-    [-5.2, 0.4],
+    [-3.9, -0.2],
+    [-3.6, -2.9],
     [-3.4, -7.8],
     [0.2, -6.0],
     [2.6, -7.2],
-    [2.6, -4.2],
+    [2.5, -5.0],
     [5.4, -5.6],
-    [4.6, -1.2],
-    [8.5, 1.0],
-    [8.5, -2.5],
+    [4.4, -2.4],
+    [5.3, 0.3],
+    [7.0, -3.5],
     [-1.5, -3.5],
     [0, -1.5],
   ];
@@ -147,7 +147,7 @@ export function RealisticLab() {
           section 06 calls for), plus two against the perimeter for depth. */}
       <EquipmentRack position={[-6.9, 0, -1.4]} rotationY={Math.PI / 2} />
       <EquipmentRack position={[-ROOM.halfWidth + 0.35, 0, -9]} rotationY={Math.PI / 2} />
-      <EquipmentRack position={[ROOM.halfWidth - 0.35, 0, -1.0]} rotationY={-Math.PI / 2} />
+      <EquipmentRack position={[ROOM.halfWidth - 0.35, 0, -3.0]} rotationY={-Math.PI / 2} />
     </group>
   );
 }
