@@ -131,8 +131,4 @@ export const HONESTY_LABELS = {
   ros2: "ROS 2 PIPELINE — SIMULATED",
   gazebo: "GAZEBO / ROBOT SIMULATION — WEBGL REPRESENTATION",
   researchPrototype: "RESEARCH PROTOTYPE, NOT A LIVE BACKEND",
-  // The static concept image shown before a visitor launches the live
-  // WebGL scene — distinct from `digitalTwin` above so it's never mistaken
-  // for the interactive representation itself.
-  conceptPreview: "CONCEPT PREVIEW — STATIC IMAGE, NOT THE LIVE 3D SCENE",
 } as const;
