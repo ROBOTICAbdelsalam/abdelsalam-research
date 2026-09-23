@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { mulberry32 } from "@/components/3d/random";
+import { Cable } from "../Cable";
 
 // The EEG cap itself: no licensed real-world asset exists for this
 // specialized hardware (src/data/bci-assets.ts), so it's built procedurally
@@ -29,14 +30,25 @@ function Electrodes() {
     return pts;
   }, []);
 
+  // Each electrode is one holder mesh — a small flat-topped cone (plastic
+  // cup silhouette) instead of a bare sphere, with the contact itself
+  // suggested by its emissive tip color. One mesh per site (not a
+  // holder+contact pair): with 40 sites this is instantiated in a scene
+  // that already carries real GLB furniture and a detailed hand, and
+  // Screen.tsx's own housing detail was already trimmed for the same
+  // scene-wide-multiplier reason — see the realism-pass performance notes.
   return (
     <group>
-      {positions.map((p, i) => (
-        <mesh key={i} position={[p.x, p.y, p.z]} scale={0.05}>
-          <sphereGeometry args={[1, 8, 8]} />
-          <meshStandardMaterial color="#cfd8ea" emissive="#3f6bd6" emissiveIntensity={0.5} roughness={0.4} metalness={0.3} />
-        </mesh>
-      ))}
+      {positions.map((p, i) => {
+        const normal = new THREE.Vector3(p.x, p.y, p.z).normalize();
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        return (
+          <mesh key={i} position={[p.x, p.y, p.z]} quaternion={quat} scale={0.05} castShadow>
+            <coneGeometry args={[1, 1.3, 7]} />
+            <meshStandardMaterial color="#26304a" emissive="#3f6bd6" emissiveIntensity={0.4} roughness={0.45} metalness={0.25} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
@@ -69,14 +81,18 @@ export function EEGCap({ cranium }: { cranium: Cranium }) {
         <cylinderGeometry args={[r * 0.045, r * 0.045, r * 1.6, 6]} />
         <meshStandardMaterial color="#0c0d10" roughness={0.6} metalness={0.15} />
       </mesh>
-      {/* Cable bundle draping from the back of the cap toward the amplifier. */}
-      <mesh
-        position={[cranium.centre.x, cranium.centre.y - r * 0.5, cranium.centre.z - r * 0.9]}
-        rotation={[-0.65, 0, 0]}
-      >
-        <cylinderGeometry args={[r * 0.09, r * 0.09, r * 1.1, 6]} />
-        <meshStandardMaterial color="#0e1014" roughness={0.5} metalness={0.3} />
-      </mesh>
+      {/* Cable bundle exiting the back of the cap and draping down toward
+          the shoulder, out of view, on its way to the amplifier — a real
+          curve with slack rather than a straight rod. */}
+      <Cable
+        from={[cranium.centre.x, cranium.centre.y - r * 0.15, cranium.centre.z - r * 0.95]}
+        to={[cranium.centre.x, cranium.centre.y - r * 1.5, cranium.centre.z - r * 0.5]}
+        sag={-r * 0.15}
+        bow={[r * 0.25, 0, -r * 0.2]}
+        radius={r * 0.09}
+        color="#0e1014"
+        metalness={0.3}
+      />
     </group>
   );
 }

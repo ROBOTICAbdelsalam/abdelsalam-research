@@ -109,7 +109,7 @@ export type CameraShot = { position: Vec3; target: Vec3 };
 // actual safety net for free orbit/pan/zoom, so these just need to be
 // reasonable starting points inside ROOM's bounds.
 export const CAMERA_SHOTS: Record<CameraMode, CameraShot> = {
-  overview: { position: [7.6, 3.4, 7.4], target: [0, 1.3, -4] },
+  overview: { position: [9.8, 4.0, 8.5], target: [-4.2, 1.5, -5.6] },
   eeg: { position: [-4.3, 1.95, -6.6], target: [-6.8, 1.4, -8.6] },
   ai: { position: [2.8, 2.9, -2.9], target: [2.8, 1.4, -7.0] },
   adaptive: { position: [4.0, 2.0, -3.1], target: [5.3, 1.35, -5.4] },
@@ -138,7 +138,16 @@ export const CAMERA_LIMITS = {
   // free orbit right after a guided transition never causes a re-clamp
   // jump. The room's hard position/target clamp (BCICameraRig) is what
   // actually keeps the camera inside the walls at this distance.
-  maxDistance: 13,
+  //
+  // `overview`'s radius (~20) is the largest of any shot — this must stay
+  // above it. It was previously 13, a stale value from before `overview`
+  // became this wide a panoramic shot: OrbitControls' own internal update()
+  // clamp re-derives distance from camera.position/target every frame
+  // (independent of BCICameraRig's own spherical lerp) and was silently
+  // pulling the camera back to radius 13 even at rest, then fighting the
+  // manual transition lerp on every subsequent preset change — the actual
+  // cause of presets appearing to stall/oscillate instead of converging.
+  maxDistance: 21,
   minPolarAngle: Math.PI * 0.1,
   maxPolarAngle: Math.PI * 0.49,
 };

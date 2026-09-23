@@ -85,6 +85,46 @@ function ProceduralBustFallback() {
   );
 }
 
+// A simple seated arm — upper arm + forearm + a rounded hand, hanging from
+// the shoulder and bending forward at the elbow toward the desk.
+// Positioned in the same normalized (unit-bust-height) space as the bust
+// geometry itself, as a sibling inside the same rotated+scaled group, so it
+// scales and faces correctly together with whichever bust (real GLB or
+// procedural fallback) is actually rendered.
+//
+// Both meshes' default long axis (capsuleGeometry) points local +Y — "0
+// rotation" is straight UP, not down. The shoulder attachment also sits
+// well below the head/neck (y=0.42, not the head's own ~0.47-0.9 range in
+// this normalized space) — both were previously wrong, which together
+// made the arms read as antenna-like horns sprouting from beside the head
+// rather than limbs reaching down to the desk (see the realism-pass visual
+// audit). rotation.x on the upper arm is now near Math.PI (flips +Y to
+// point down) with a small forward lean; the forearm then bends the elbow
+// forward from there to bring the hand down near the keyboard.
+function Arm({ side }: { side: 1 | -1 }) {
+  const skin = "#262b34"; // same uniform material as the bust — see the file header on why this isn't a photoreal skin tone
+  return (
+    <group position={[side * 0.29, 0.42, 0.05]} rotation={[Math.PI - 0.3, 0, side * 0.16]}>
+      <mesh position-y={0.11} castShadow>
+        <capsuleGeometry args={[0.052, 0.2, 4, 8]} />
+        <meshStandardMaterial color={skin} roughness={0.78} />
+      </mesh>
+      <group position-y={0.22} rotation={[1.55, 0, side * 0.1]}>
+        <mesh position-y={0.1} castShadow>
+          <capsuleGeometry args={[0.042, 0.19, 4, 8]} />
+          <meshStandardMaterial color={skin} roughness={0.78} />
+        </mesh>
+        {/* Hand: a flattened, rounded block resting near the keyboard —
+            enough to read as a hand at this scale without finger detail. */}
+        <mesh position-y={0.21} rotation-x={0.3} castShadow>
+          <boxGeometry args={[0.075, 0.03, 0.11]} />
+          <meshStandardMaterial color={skin} roughness={0.76} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
 function Chair() {
   return (
     <group>
@@ -134,6 +174,11 @@ export function EEGParticipant() {
   return (
     <group>
       <Chair />
+      {/* A small, dim fill light on the participant only — the EEG alcove's
+          general lighting is a distant desk lamp, which left the seated
+          figure reading as a near-silhouette with no visible shoulder/torso
+          shape. Warm-neutral and low-intensity: a fill, not a spotlight. */}
+      <pointLight position={[0.25, 1.3, 0.5]} color="#aebdd6" intensity={2.6} distance={1.6} decay={2} />
       {/* Seated torso height: the chair's backrest sits around y=0.68-1.1,
           so the bust's shoulder line (its own y=0) starts a little above
           the seat pan. */}
@@ -141,6 +186,11 @@ export function EEGParticipant() {
         <WithAsset fallback={<ProceduralBustFallback />}>
           <GlbBust />
         </WithAsset>
+        {/* Arms — shared between the real bust and its procedural fallback
+            rather than duplicated in each, since both use the same
+            normalized cranium/shoulder space (see GlbBust's cranium fit). */}
+        <Arm side={1} />
+        <Arm side={-1} />
       </group>
     </group>
   );

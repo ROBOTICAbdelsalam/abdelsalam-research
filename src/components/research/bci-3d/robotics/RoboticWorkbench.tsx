@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { GESTURES, HONESTY_LABELS } from "@/data/bci-experiment";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { Cable } from "../Cable";
 import { useBciExperiment } from "../BCIExperimentProvider";
 import { HAND_POSITION } from "../layout";
 import { Nameplate } from "../Nameplate";
@@ -10,6 +11,8 @@ import { Screen } from "../Screen";
 import { drawBackdrop, drawChrome, drawKeyValueRows, PANEL } from "../screenTextures";
 import { StationZone } from "../StationZone";
 import { RoboticHand } from "./RoboticHand";
+
+const STEEL = { color: "#8d95a3", metalness: 0.9, roughness: 0.22 } as const;
 
 // H. ROBOTICS WORKCELL — a real rectangular workbench (no licensed
 // "robotics workbench" GLB fit a premium-lab brief; every candidate
@@ -43,11 +46,39 @@ function Workbench() {
           </mesh>
         )),
       )}
-      {/* Mounting plate the hand is bolted to. */}
+      {/* Mounting plate the hand is bolted to, with real bolt heads around
+          its rim rather than an implied fastening. */}
       <mesh position={[0.05, BENCH_TOP_Y + 0.028, -0.05]} castShadow>
         <cylinderGeometry args={[0.13, 0.13, 0.03, 20]} />
         <meshStandardMaterial color="#3a4150" roughness={0.35} metalness={0.7} />
       </mesh>
+      {Array.from({ length: 8 }, (_, i) => {
+        const a = (i / 8) * Math.PI * 2;
+        return (
+          <mesh key={i} position={[0.05 + Math.cos(a) * 0.112, BENCH_TOP_Y + 0.045, -0.05 + Math.sin(a) * 0.112]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.014, 6]} />
+            <meshStandardMaterial {...STEEL} />
+          </mesh>
+        );
+      })}
+
+      {/* Small controller box — the hand's local control/power unit,
+          separate from the ROS2 desk's control station across the room. */}
+      <group position={[0.4, BENCH_TOP_Y, -0.22]}>
+        <mesh position-y={0.045} castShadow receiveShadow>
+          <boxGeometry args={[0.16, 0.09, 0.13]} />
+          <meshStandardMaterial color="#181b21" roughness={0.45} metalness={0.4} />
+        </mesh>
+        <mesh position={[-0.05, 0.075, 0.066]}>
+          <boxGeometry args={[0.014, 0.008, 0.004]} />
+          <meshStandardMaterial color="#5cf2a8" emissive="#5cf2a8" emissiveIntensity={1.4} toneMapped={false} />
+        </mesh>
+        <mesh position={[0.02, 0.075, 0.066]} rotation-z={Math.PI / 2}>
+          <cylinderGeometry args={[0.012, 0.012, 0.02, 12]} />
+          <meshStandardMaterial color="#2a2f38" roughness={0.4} metalness={0.6} />
+        </mesh>
+      </group>
+      <Cable from={[0.12, BENCH_TOP_Y + 0.14, -0.12]} to={[0.36, BENCH_TOP_Y + 0.09, -0.2]} sag={0.02} radius={0.007} />
       {/* Small parts tray: a hex-bolt-like part and a chamfered block. */}
       <mesh position={[-0.48, BENCH_TOP_Y + 0.03, 0.18]} castShadow>
         <boxGeometry args={[0.1, 0.06, 0.1]} />
@@ -66,6 +97,26 @@ function Workbench() {
           realism pass's "grid may exist subtly as part of the robotics
           environment, but must not dominate the lab". */}
       <gridHelper args={[0.34, 6, "#2dd4c8", "#193a3a"]} position={[0.05, BENCH_TOP_Y + 0.044, -0.05]} />
+
+      {/* Physical emergency-stop button — a mushroom-cap red button on a
+          yellow base, mounted on the bench's front edge. The HUD's own
+          E-Stop control drives the actual state machine; this is the
+          workcell's physical safety hardware a real robotics bench would
+          have, per the realism pass's workcell requirements. */}
+      <group position={[-0.58, BENCH_TOP_Y + 0.025, 0.3]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.026, 0.026, 0.014, 16]} />
+          <meshStandardMaterial color="#e0a23d" roughness={0.5} metalness={0.3} />
+        </mesh>
+        <mesh position-y={0.014} castShadow>
+          <cylinderGeometry args={[0.016, 0.016, 0.012, 16]} />
+          <meshStandardMaterial color="#1c2027" roughness={0.4} metalness={0.5} />
+        </mesh>
+        <mesh position-y={0.026} castShadow>
+          <sphereGeometry args={[0.018, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+          <meshStandardMaterial color="#c23b3f" roughness={0.4} metalness={0.15} />
+        </mesh>
+      </group>
     </group>
   );
 }

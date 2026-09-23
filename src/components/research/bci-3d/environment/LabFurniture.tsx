@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { mulberry32 } from "@/components/3d/random";
 import { GlbProp } from "../assets/AssetLoader";
+import { Cable } from "../Cable";
 
 // Real, licensed furniture (CC0, Poly Haven — see src/data/bci-assets.ts)
 // with procedural fallbacks sized to match each real asset's own real-world
@@ -111,14 +112,16 @@ export function DeskClutter({ position = [0.5, DESK_TOP_Y, -0.15] as [number, nu
         <boxGeometry args={[0.3, 0.001, 0.095]} />
         <meshStandardMaterial color="#0e1014" roughness={0.7} />
       </mesh>
+      {/* Mousepad — the mouse sits ON something, not directly on the desk. */}
+      <mesh position={[0.24, 0.002, 0.06]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[0.14, 0.1]} />
+        <meshStandardMaterial color="#101216" roughness={0.85} />
+      </mesh>
       <mesh position={[0.24, 0.012, 0.06]} rotation={[0, 0.25, 0]} castShadow>
         <capsuleGeometry args={[0.018, 0.03, 4, 8]} />
         <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.25} />
       </mesh>
-      <mesh position={[-0.05, -DESK_TOP_Y / 2 - 0.02, -0.02]} rotation={[0.14, 0, 0]}>
-        <cylinderGeometry args={[0.006, 0.006, DESK_TOP_Y - 0.02, 6]} />
-        <meshStandardMaterial color="#0c0d10" roughness={0.6} metalness={0.2} />
-      </mesh>
+      <Cable from={[-0.16, 0.007, 0]} to={[-0.05, -DESK_TOP_Y + 0.03, -0.05]} sag={0.02} bow={[-0.03, 0, 0]} radius={0.005} />
     </group>
   );
 }
@@ -203,6 +206,31 @@ export function ControlConsole({ position = [0.86, 0, 0.05] as [number, number, 
 
 // A small network switch / patch panel — the ROS 2 area's "control room"
 // detail, a row of blinking port LEDs.
+// A compact fanless industrial PC — the ROS 2 workstation's actual
+// controller, distinct from the network switch beside it: a squat
+// vented enclosure with a single power LED, standing on the desk rather
+// than implied by the monitor alone.
+export function IndustrialComputer({ position = [0, 0, 0] as [number, number, number], rotationY = 0 }) {
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <mesh position-y={0.055} castShadow receiveShadow>
+        <boxGeometry args={[0.14, 0.11, 0.16]} />
+        <meshStandardMaterial color="#20242c" roughness={0.4} metalness={0.55} />
+      </mesh>
+      {Array.from({ length: 6 }, (_, i) => (
+        <mesh key={i} position={[-0.055 + i * 0.022, 0.055, 0.081]}>
+          <boxGeometry args={[0.006, 0.08, 0.004]} />
+          <meshStandardMaterial color="#0c0d10" roughness={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0.05, 0.02, 0.081]}>
+        <circleGeometry args={[0.006, 10]} />
+        <meshStandardMaterial color="#5cf2a8" emissive="#5cf2a8" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
 export function NetworkSwitch({ position = [0, 0, 0] as [number, number, number], rotationY = 0 }) {
   const ports = mulberry32(21);
   return (

@@ -53,8 +53,14 @@ export function BCIInfoPanel() {
   if (!focusedStation) return null;
   const info = STATION_INFO[focusedStation];
 
+  // Deliberately NOT self-positioned (no `absolute`) — REBUILT for the HUD
+  // overlay pass. It's now a normal-flow child of the same bottom-anchored
+  // flex column as the control bars (see BCIDigitalTwin.tsx's Stage), so
+  // when a station is focused this card simply stacks above the controls
+  // instead of both being independently `absolute`-positioned and risking
+  // overlap at the bottom of the viewport.
   return (
-    <div className="pointer-events-auto absolute bottom-4 left-4 z-10 w-[calc(100%-2rem)] max-w-xs rounded-xl border border-border-strong bg-surface/95 p-4 shadow-lg backdrop-blur">
+    <div className="pointer-events-auto w-full max-w-xs rounded-xl border border-border-strong bg-surface/95 p-4 shadow-lg backdrop-blur">
       <div className="flex items-start justify-between gap-3">
         <h4 className="font-display text-sm font-medium tracking-tight">{info.title}</h4>
         <button

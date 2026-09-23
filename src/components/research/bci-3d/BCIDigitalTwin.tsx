@@ -8,7 +8,7 @@ import { useWebglSupport } from "@/lib/ai-lab/useWebglSupport";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { HONESTY_LABELS } from "@/data/bci-experiment";
-import { BCIExperimentProvider } from "./BCIExperimentProvider";
+import { BCIExperimentProvider, useBciExperiment } from "./BCIExperimentProvider";
 import { BCIInfoPanel } from "./BCIInfoPanel";
 import { ExperimentControls } from "./ExperimentControls";
 import { ExperimentTimeline } from "./ExperimentTimeline";
@@ -32,6 +32,33 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
   }
 }
 
+// The stage's own top overlay: a phase badge + the compact pipeline
+// stepper on the left, the honesty label on the right — one slim bar
+// instead of two separate floating badges, so the top of the laboratory
+// stays mostly clear.
+function TopBar() {
+  const { phase } = useBciExperiment();
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-2 sm:p-3">
+      <div className="pointer-events-auto flex max-w-[75%] items-center gap-2 overflow-x-auto rounded-full border border-border-strong bg-surface/90 px-2.5 py-1.5 backdrop-blur">
+        <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-accent sm:text-[10px]">{phase.replace(/_/g, " ")}</span>
+        <span className="h-4 w-px shrink-0 bg-border" aria-hidden />
+        <ExperimentTimeline />
+      </div>
+      <div className="pointer-events-none shrink-0 rounded-full border border-border-strong bg-surface/85 px-2 py-1 font-mono text-[8px] uppercase tracking-wide text-muted backdrop-blur sm:px-2.5 sm:text-[9px]">
+        {HONESTY_LABELS.digitalTwin}
+      </div>
+    </div>
+  );
+}
+
+// REBUILT for the HUD overlay pass — the 3D laboratory is now the primary,
+// dominant visual (section 1/7 of the pass), with every control living as
+// a small floating bar over the viewport rather than a permanent sidebar
+// of equal visual weight to the scene itself. See TopBar above and the
+// bottom-anchored stack below; BCIInfoPanel and ExperimentControls share
+// one flex column there so a focused-station card and the control bars
+// never overlap.
 function Stage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const hydrated = useHydrated();
@@ -57,7 +84,7 @@ function Stage() {
       ref={rootRef}
       role="group"
       aria-label="Interactive digital twin of the Hybrid-Adaptive BCI pipeline: EEG through signal processing, feature extraction, CNN-LSTM classification, an adaptive confidence gate, ROS 2, MoveIt2, Gazebo simulation and a simulated five-finger robotic hand"
-      className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border-strong bg-[#05070a] sm:aspect-video lg:aspect-[16/10]"
+      className="relative aspect-square w-full overflow-hidden rounded-3xl border border-border-strong bg-[#05070a] sm:aspect-video lg:aspect-[16/10]"
     >
       <div
         aria-hidden
@@ -77,17 +104,25 @@ function Stage() {
               onReady={() => setReady(true)}
             />
           </div>
-          <BCIInfoPanel />
-        </SceneBoundary>
-      )}
 
-      <div className="pointer-events-none absolute right-3 top-3 rounded-full border border-border-strong bg-surface/85 px-3 py-1 font-mono text-[10px] uppercase tracking-wide text-muted backdrop-blur">
-        {HONESTY_LABELS.digitalTwin}
-      </div>
-      {reducedMotion ? null : (
-        <div className="pointer-events-none absolute bottom-3 right-3 rounded-full border border-border-strong bg-surface/85 px-3 py-1 text-[10px] text-muted backdrop-blur">
-          Drag to orbit · scroll to zoom · click a station
-        </div>
+          <TopBar />
+
+          {reducedMotion ? null : (
+            <div className="pointer-events-none absolute right-3 top-12 z-10 hidden rounded-full border border-border-strong bg-surface/80 px-2 py-1 text-[9px] text-muted backdrop-blur sm:top-14 md:block">
+              Drag · scroll · click a station
+            </div>
+          )}
+
+          {/* Bottom-anchored stack: a focused-station card (if any) sits
+              above the control bars in normal flow — never independently
+              positioned, so they can't overlap. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-start gap-2 p-2 sm:p-3">
+            <BCIInfoPanel />
+            <div className="pointer-events-none w-full">
+              <ExperimentControls />
+            </div>
+          </div>
+        </SceneBoundary>
       )}
     </div>
   );
@@ -101,12 +136,8 @@ export function BCIDigitalTwin() {
         title="Explore the EEG-to-robotic-hand pipeline"
         subtitle="A real-time WebGL digital twin of the implemented thesis pipeline — a research prototype, not a live backend. Select a command, start the experiment, and follow it through preprocessing, classification, the adaptive confidence gate, ROS 2 and Gazebo, to the simulated robotic hand."
       />
-      <div className="mt-10 flex flex-col gap-6">
-        <ExperimentTimeline />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr] lg:items-start">
-          <Stage />
-          <ExperimentControls />
-        </div>
+      <div className="mt-8">
+        <Stage />
       </div>
     </BCIExperimentProvider>
   );

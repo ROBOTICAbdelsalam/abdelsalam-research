@@ -129,8 +129,14 @@ export function Screen({
           </mesh>
         </group>
       )}
+      {/* Thin-bezel panel — narrower depth than before (a real monitor
+          reads as slim, not a uniform slab). This is a proportion change
+          only, not extra geometry: Screen.tsx is instantiated ~14 times
+          across the lab, so any *added* mesh here has an outsized scene-
+          wide cost; a rear-housing hump and tilt hinge were tried and
+          reverted for exactly that reason — see the realism-pass notes. */}
       <mesh>
-        <boxGeometry args={[w + bezel * 2, h + bezel * 2, bezel]} />
+        <boxGeometry args={[w + bezel * 2, h + bezel * 2, bezel * 0.6]} />
         <meshStandardMaterial color={bezelColor} roughness={0.55} metalness={0.35} />
       </mesh>
       {/* Content faces local -Z, matching the site's "-Z is forward" convention
@@ -140,11 +146,11 @@ export function Screen({
           desk, and a monitor that goes black from "behind" reads as broken,
           not as physically accurate — legible from both sides is the more
           honest choice for an explorable scene. */}
-      <mesh position={[0, 0, -(bezel / 2 + 0.002)]} rotation={[0, Math.PI, 0]}>
+      <mesh position={[0, 0, -(bezel * 0.3 + 0.002)]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[w, h]} />
         <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, 0, -(bezel / 2 + 0.001)]} rotation={[0, Math.PI, 0]}>
+      <mesh position={[0, 0, -(bezel * 0.3 + 0.001)]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[w + bezel * 0.35, h + bezel * 0.35]} />
         <meshBasicMaterial color={glow} transparent opacity={0.05} toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
