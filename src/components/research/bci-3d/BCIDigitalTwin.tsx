@@ -12,6 +12,7 @@ import { BCIExperimentProvider, useBciExperiment } from "./BCIExperimentProvider
 import { BCIInfoPanel } from "./BCIInfoPanel";
 import { ExperimentControls } from "./ExperimentControls";
 import { ExperimentTimeline } from "./ExperimentTimeline";
+import { RunReadout } from "./RunReadout";
 import { WebGLFallback } from "./WebGLFallback";
 
 // three / R3F / drei only ship on the client, after first paint, once the
@@ -131,6 +132,7 @@ function Stage() {
               positioned, so they can't overlap. */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-start gap-2 p-2 sm:p-3">
             <BCIInfoPanel />
+            <RunReadout />
             <div className="pointer-events-none w-full">
               <ExperimentControls />
             </div>
@@ -149,7 +151,7 @@ export function BCIDigitalTwin() {
         title="Explore the EEG-to-robotic-hand pipeline"
         subtitle="A real-time WebGL digital twin of the implemented thesis pipeline — a research prototype, not a live backend. Select a command, start the experiment, and follow it through preprocessing, classification, the adaptive confidence gate, ROS 2 and Gazebo, to the simulated robotic hand."
       />
-      <div className="mt-8">
+      <div className="mt-5">
         <Stage />
       </div>
     </BCIExperimentProvider>

@@ -121,16 +121,25 @@ export default async function ProjectPage({
 
       {hasInteractiveExperiment && experimentIndex && (
         // Wider than the page's normal max-w-6xl content column, and with
-        // its own smaller bottom padding (the top stays py-20/24 to match
-        // the border-t divider's usual rhythm) — the UI-scale pass below.
-        // The lab itself is a major hero section here, not a small
-        // embedded widget, and the gap down to Status shouldn't feel like
-        // its own empty section.
-        <section className="pt-20 pb-10 md:pt-24 md:pb-12 border-t border-border">
-          <Container className="max-w-[1680px]">
+        // tighter side padding than Container's own default (px-6/px-10) —
+        // the source photo is a fixed ~2.7:1 panorama, so the only safe way
+        // to make the lab bigger without narrowing its aspect (which crops
+        // real content — see BCIDigitalTwin.tsx's own note) is maximizing
+        // width. A plain div here, not <Container>: Container's own base
+        // classes (px-6 md:px-10) and a passed-in override both land in the
+        // same class string, and plain clsx doesn't drop the loser — the
+        // narrower padding silently never won. This div has only the
+        // classes it needs, so there's nothing to contend with. 1680px
+        // never actually binds below very large monitors; the real ceiling
+        // on ordinary desktop widths is this padding. Top padding on the
+        // section stays py-20/24 to match the border-t divider's usual
+        // rhythm; bottom is trimmed so the gap down to Status reads as
+        // intentional, not like its own empty section.
+        <section className="pt-20 pb-8 md:pt-24 md:pb-10 border-t border-border">
+          <div className="mx-auto w-full max-w-[1680px] px-3 sm:px-4 md:px-5">
             <SectionLabel index={experimentIndex} title="Interactive 3D Experiment" />
             <BCIDigitalTwin />
-          </Container>
+          </div>
         </section>
       )}
 

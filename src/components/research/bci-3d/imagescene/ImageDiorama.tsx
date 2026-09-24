@@ -15,6 +15,8 @@ import {
   type StationId,
 } from "../layout";
 import { StationZone } from "../StationZone";
+import { PipelineFlow } from "./PipelineFlow";
+import { HandRig } from "./HandRig";
 
 // IMAGE-BASED DIORAMA — the BCI Digital Twin's 3D scene, REBUILT from the
 // ground up to be a layered 3D reconstruction of a single source photo
@@ -287,6 +289,8 @@ export function ImageDiorama() {
       <HeroLayer baseTexture={baseTexture} softMask={softMask} crop={HERO_CROPS.core} />
       <HeroLayer baseTexture={baseTexture} softMask={softMask} crop={HERO_CROPS.hand} />
       <HandStateGlow />
+      <PipelineFlow />
+      <HandRig />
       <EmergencyOverlay />
       <Hotspots />
     </group>

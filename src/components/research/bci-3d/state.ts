@@ -34,17 +34,27 @@ const stageDuration = (stage: PipelineStageId, ms: number, status: string): Expe
  * Builds the full tick sequence for one run, given whether the selected
  * command's demo confidence clears LIVE_GATE_THRESHOLD. Rejected runs stop
  * at the confidence gate — the hand never moves on a rejected command.
+ *
+ * Durations tuned for the cinematic run-through brief: EEG/Preprocessing/
+ * Features 1.5s each, CNN-LSTM 2s, Adaptive Decision 2s (the
+ * WAITING_FOR_CONFIDENCE + COMMAND_ACCEPTED pair below), ROS2+MoveIt2
+ * 1.5s combined (the source photo has no separate MoveIt2 signage, so
+ * these read as one "ROS2 & MoveIt2" stage), Gazebo 1.5s, Robot execution
+ * 2.5s — summing to exactly 14s for an accepted run, before the
+ * COMPLETED hold below (which is the separate post-run settle, not part
+ * of that budget). Same phases, same stages, same order, same gate logic
+ * as before — only the pacing changed.
  */
 export function buildRunSequence(accepted: boolean): ExperimentTick[] {
   const ticks: ExperimentTick[] = [
-    stageDuration("eeg", 1100, "Streaming EEG window (simulated)"),
-    stageDuration("preprocessing", 1000, "Filtering 1–40 Hz · ICA review · epoching"),
-    stageDuration("features", 1000, "CSP + log-variance feature extraction"),
-    { phase: "PREDICTING", stage: "cnn-lstm", durationMs: 1300, status: "CNN-LSTM inference" },
+    stageDuration("eeg", 1500, "Streaming EEG window (simulated)"),
+    stageDuration("preprocessing", 1500, "Filtering 1–40 Hz · ICA review · epoching"),
+    stageDuration("features", 1500, "CSP + log-variance feature extraction"),
+    { phase: "PREDICTING", stage: "cnn-lstm", durationMs: 2000, status: "CNN-LSTM inference" },
     {
       phase: "WAITING_FOR_CONFIDENCE",
       stage: "adaptive-gate",
-      durationMs: 900,
+      durationMs: 1500,
       status: "Checking confidence against the gate",
     },
   ];
@@ -61,10 +71,10 @@ export function buildRunSequence(accepted: boolean): ExperimentTick[] {
 
   ticks.push(
     { phase: "COMMAND_ACCEPTED", stage: "adaptive-gate", durationMs: 500, status: "Command accepted" },
-    { phase: "EXECUTING", stage: "ros2", durationMs: 850, status: "Robot abstraction → adapter → ros2_control" },
-    { phase: "EXECUTING", stage: "moveit2", durationMs: 850, status: "MoveIt2 motion planning" },
-    { phase: "EXECUTING", stage: "gazebo", durationMs: 750, status: "Gazebo Harmonic simulation step" },
-    { phase: "EXECUTING", stage: "robot", durationMs: 1300, status: "Robotic hand executing gesture" },
+    { phase: "EXECUTING", stage: "ros2", durationMs: 750, status: "Robot abstraction → adapter → ros2_control" },
+    { phase: "EXECUTING", stage: "moveit2", durationMs: 750, status: "MoveIt2 motion planning" },
+    { phase: "EXECUTING", stage: "gazebo", durationMs: 1500, status: "Gazebo Harmonic simulation step" },
+    { phase: "EXECUTING", stage: "robot", durationMs: 2500, status: "Robotic hand executing gesture" },
     { phase: "COMPLETED", stage: "robot", durationMs: 2200, status: "Gesture complete" },
   );
   return ticks;

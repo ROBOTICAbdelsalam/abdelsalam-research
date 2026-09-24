@@ -80,6 +80,40 @@ export const STATION_POSITIONS: Record<StationId, Vec3> = {
   hand: HAND_POSITION,
 };
 
+// Pipeline-flow order — the sequence a run visits these stations in,
+// used only by the cinematic data-flow overlay (imagescene/PipelineFlow)
+// to draw the connecting signal path and know which segment is "in
+// flight". Matches STATION_POSITIONS' own insertion order above (which
+// already matches pipeline order); kept as its own explicit list so that
+// intent reads clearly even if the object's key order ever changes.
+export const STATION_FLOW_ORDER: readonly StationId[] = [
+  "eeg",
+  "signal-processing",
+  "feature-extraction",
+  "cnn-lstm",
+  "adaptive-decision",
+  "ros2",
+  "gazebo",
+  "hand",
+];
+
+// Which on-image station a given pipeline stage's processing visually
+// belongs to — used by the same cinematic overlay to know which station
+// to highlight/animate for the run's current stage. ROS2 and MoveIt2
+// both read as the same ROS2 station on the backdrop; there's no
+// separate MoveIt2 signage in the source photo.
+export const STAGE_TO_STATION: Record<PipelineStageId, StationId> = {
+  eeg: "eeg",
+  preprocessing: "signal-processing",
+  features: "feature-extraction",
+  "cnn-lstm": "cnn-lstm",
+  "adaptive-gate": "adaptive-decision",
+  ros2: "ros2",
+  moveit2: "ros2",
+  gazebo: "gazebo",
+  robot: "hand",
+};
+
 // A tight safety box around the diorama, just for BCICameraRig's existing
 // room-bounds clamp (that file's own code is unchanged — only these
 // numbers are new). No floor/walls are rendered; this purely keeps free
