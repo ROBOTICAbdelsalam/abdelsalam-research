@@ -120,8 +120,14 @@ export default async function ProjectPage({
       </section>
 
       {hasInteractiveExperiment && experimentIndex && (
-        <section className="py-20 md:py-24 border-t border-border">
-          <Container>
+        // Wider than the page's normal max-w-6xl content column, and with
+        // its own smaller bottom padding (the top stays py-20/24 to match
+        // the border-t divider's usual rhythm) — the UI-scale pass below.
+        // The lab itself is a major hero section here, not a small
+        // embedded widget, and the gap down to Status shouldn't feel like
+        // its own empty section.
+        <section className="pt-20 pb-10 md:pt-24 md:pb-12 border-t border-border">
+          <Container className="max-w-[1680px]">
             <SectionLabel index={experimentIndex} title="Interactive 3D Experiment" />
             <BCIDigitalTwin />
           </Container>

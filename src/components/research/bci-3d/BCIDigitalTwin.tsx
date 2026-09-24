@@ -62,6 +62,16 @@ function TopBar() {
 // old squarer aspect) because the source photo is itself a wide,
 // panoramic single frame (EEG left, Core center, hand right) — a taller
 // container would crop the two flanking hero elements off-screen.
+//
+// `lg:aspect-[8/3]` is intentionally NOT reduced further (a UI-scale pass
+// tried 21/10 here and it visibly cropped the EEG participant — caught by
+// screenshot and reverted). The backdrop plane in ImageDiorama.tsx has a
+// safety margin, but it only helps when the camera's position/target
+// drift off-center during a transition; at this resting, dead-center
+// "overview" framing, the margin does nothing, and the actual no-crop
+// aspect floor works out to the source photo's own ~2.73:1 — a hair above
+// 8/3 already. Every desktop-height gain since has come from the
+// container growing wider at this same aspect, not from a shorter one.
 function Stage() {
   const rootRef = useRef<HTMLDivElement>(null);
   const hydrated = useHydrated();
