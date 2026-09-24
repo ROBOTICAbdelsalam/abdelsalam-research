@@ -185,4 +185,22 @@ export const CAMERA_LIMITS = {
   // or empty space behind it.
   minPolarAngle: Math.PI * 0.4,
   maxPolarAngle: Math.PI * 0.62,
+  // Bug fix (texture-stretching report): every visible layer here is a
+  // flat, paper-thin plane with nothing behind it — there is no "side" or
+  // "back" to this diorama. Unlike minPolarAngle/maxPolarAngle above,
+  // azimuth had no limit at all, so a normal orbit drag could swing the
+  // camera toward edge-on to those planes (severe perspective stretching
+  // — the reported "stretched bands") and, taken further, fully behind
+  // them (backface-culled to black, since every layer uses the default
+  // front-side-only material). Reproduced directly: dragging past ~±35°
+  // from center turns the backdrop into long horizontal streaks; past
+  // roughly ±60-70° it goes solid black but for the pipeline-flow lines
+  // (Line materials aren't face-culled the way the image planes are).
+  // ±32° keeps every CAMERA_SHOTS preset's own azimuth (the widest is
+  // "eeg" at ~17.5°) comfortably inside the bound with room to spare for
+  // free exploration, while staying well short of where stretching
+  // starts — the same kind of hard safety clamp minPolarAngle/
+  // maxPolarAngle already are, just for the other axis.
+  minAzimuthAngle: -Math.PI * 0.178,
+  maxAzimuthAngle: Math.PI * 0.178,
 };

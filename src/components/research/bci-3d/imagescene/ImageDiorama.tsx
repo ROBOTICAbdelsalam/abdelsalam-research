@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useBciExperiment } from "../BCIExperimentProvider";
@@ -46,14 +46,24 @@ const IMAGE_URL = "/images/bci-lab-overview.jpg";
 // instance to another consumer). This hook constructs and configures a
 // texture together — cloning once, in the one place that owns the clone
 // — so nothing downstream ever touches the hook's own return value.
+//
+// `anisotropy` is set here, once, on the base clone every Backdrop/
+// HeroLayer clone descends from (THREE.Texture.clone() copies it along) —
+// texture-safety hardening from the stretching-artifact report: it keeps
+// sampling clean at the mild residual tilt free orbit still allows (see
+// CAMERA_LIMITS' new azimuth bound in layout.ts, the actual fix for that
+// report), rather than changing anything about the crop/UV logic below,
+// which audited clean.
 function usePreparedTexture(url: string) {
   const source = useTexture(url);
+  const { gl } = useThree();
   return useMemo(() => {
     const clone = source.clone();
     clone.colorSpace = THREE.SRGBColorSpace;
+    clone.anisotropy = gl.capabilities.getMaxAnisotropy();
     clone.needsUpdate = true;
     return clone;
-  }, [source]);
+  }, [source, gl]);
 }
 
 // Pixel-space crop rectangles for each hero layer, in the same 1672×607
@@ -65,11 +75,22 @@ const HERO_CROPS = {
   hand: { px: [1215, 295, 1670, 605] as const, z: 0.28 },
 };
 
+// UV-safety audit (stretching-artifact report): every HERO_CROPS box below
+// was checked and all stay strictly inside [0, 1] except "core", whose
+// y0=0 (the very top image row) puts v1 at exactly 1.0 — a valid boundary
+// value, not an out-of-range one, but bilinear sampling exactly at a 0/1
+// edge is the kind of case worth a hair of margin regardless. EPS insets
+// every crop off the true 0/1 edges by under a pixel — invisible, and it
+// means no hero layer's texture.offset/repeat can ever land a sample
+// exactly on the boundary ClampToEdgeWrapping is there to guard.
+const EPS = 0.0015;
+const clamp01 = (v: number) => THREE.MathUtils.clamp(v, EPS, 1 - EPS);
+
 function pixelToUvBox([x0, y0, x1, y1]: readonly [number, number, number, number]) {
-  const u0 = x0 / 1672;
-  const u1 = x1 / 1672;
-  const v0 = 1 - y1 / 607; // bottom of crop (larger pixel y) → smaller v
-  const v1 = 1 - y0 / 607; // top of crop (smaller pixel y) → larger v
+  const u0 = clamp01(x0 / 1672);
+  const u1 = clamp01(x1 / 1672);
+  const v0 = clamp01(1 - y1 / 607); // bottom of crop (larger pixel y) → smaller v
+  const v1 = clamp01(1 - y0 / 607); // top of crop (smaller pixel y) → larger v
   return { offset: [u0, v0] as const, repeat: [u1 - u0, v1 - v0] as const };
 }
 

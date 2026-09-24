@@ -157,6 +157,8 @@ export function BCICameraRig() {
       maxDistance={CAMERA_LIMITS.maxDistance}
       minPolarAngle={CAMERA_LIMITS.minPolarAngle}
       maxPolarAngle={CAMERA_LIMITS.maxPolarAngle}
+      minAzimuthAngle={CAMERA_LIMITS.minAzimuthAngle}
+      maxAzimuthAngle={CAMERA_LIMITS.maxAzimuthAngle}
     />
   );
 }
