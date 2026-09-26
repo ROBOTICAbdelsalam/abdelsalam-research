@@ -63,7 +63,7 @@ export const projects: Project[] = [
     ],
     status: "M.Sc. Thesis · Completed 2026",
     links: {
-      github: "",
+      github: "https://github.com/ROBOTICAbdelsalam/-Hybrid-Adaptive-BCI-Thesis-",
       demo: "",
       research: "/research/hybrid-adaptive-bci",
     },

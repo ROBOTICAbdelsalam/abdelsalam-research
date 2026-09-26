@@ -3,17 +3,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, FlaskConical, ArrowLeft } from "lucide-react";
 import { GithubIcon } from "@/components/icons/BrandIcons";
-import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Reveal } from "@/components/ui/Reveal";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { ProjectMediaGrid } from "@/components/sections/ProjectMediaGrid";
-import { BCIDigitalTwin } from "@/components/research/bci-3d/BCIDigitalTwin";
+import { BCICaseStudy } from "@/components/research/bci-case-study/BCICaseStudy";
 import { projects } from "@/data/projects";
+import { THESIS_META } from "@/data/bci-thesis";
 
 type Params = { slug: string };
+
+// The one project with a full premium case-study treatment — see
+// src/components/research/bci-case-study/BCICaseStudy.tsx. Every other
+// slug renders the generic template below, completely unchanged.
+const CASE_STUDY_SLUG = "hybrid-adaptive-bci";
 
 export function generateStaticParams(): Params[] {
   return projects.map((project) => ({ slug: project.slug }));
@@ -27,6 +32,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) return {};
+
+  if (slug === CASE_STUDY_SLUG) {
+    return {
+      title: `${THESIS_META.title} — ${THESIS_META.subtitle}`,
+      description: THESIS_META.description,
+    };
+  }
 
   return {
     title: project.name,
@@ -55,6 +67,14 @@ export default async function ProjectPage({
 
   if (!project) notFound();
 
+  // The BCI case study is a completely different, self-contained page
+  // body (its own hero, its own section flow) — see BCICaseStudy's own
+  // header comment for why. Every other project keeps the generic
+  // template below exactly as it was.
+  if (slug === CASE_STUDY_SLUG) {
+    return <BCICaseStudy />;
+  }
+
   const { github, demo, research } = project.links;
   const hasLinks = Boolean(github || demo || research);
   const hasMedia = Boolean(
@@ -67,11 +87,9 @@ export default async function ProjectPage({
 
   // Numbered sequentially so the optional Media section never leaves a gap
   // in the numbering when a project has no media yet.
-  const hasInteractiveExperiment = project.slug === "hybrid-adaptive-bci";
   let sectionIndex = 2; // Problem = 1, Build = 2
   const mediaIndex = hasMedia ? ++sectionIndex : undefined;
   const technologyIndex = ++sectionIndex;
-  const experimentIndex = hasInteractiveExperiment ? ++sectionIndex : undefined;
   const statusIndex = ++sectionIndex;
   const linksIndex = ++sectionIndex;
 
@@ -119,31 +137,7 @@ export default async function ProjectPage({
         </Container>
       </section>
 
-      {hasInteractiveExperiment && experimentIndex && (
-        // Wider than the page's normal max-w-6xl content column, and with
-        // tighter side padding than Container's own default (px-6/px-10) —
-        // the source photo is a fixed ~2.7:1 panorama, so the only safe way
-        // to make the lab bigger without narrowing its aspect (which crops
-        // real content — see BCIDigitalTwin.tsx's own note) is maximizing
-        // width. A plain div here, not <Container>: Container's own base
-        // classes (px-6 md:px-10) and a passed-in override both land in the
-        // same class string, and plain clsx doesn't drop the loser — the
-        // narrower padding silently never won. This div has only the
-        // classes it needs, so there's nothing to contend with. 1680px
-        // never actually binds below very large monitors; the real ceiling
-        // on ordinary desktop widths is this padding. Top padding on the
-        // section stays py-20/24 to match the border-t divider's usual
-        // rhythm; bottom is trimmed so the gap down to Status reads as
-        // intentional, not like its own empty section.
-        <section className="pt-20 pb-8 md:pt-24 md:pb-10 border-t border-border">
-          <div className="mx-auto w-full max-w-[1680px] px-3 sm:px-4 md:px-5">
-            <SectionLabel index={experimentIndex} title="Interactive 3D Experiment" />
-            <BCIDigitalTwin />
-          </div>
-        </section>
-      )}
-
-      <section className={cn("py-20 md:py-24", hasInteractiveExperiment && "border-t border-border")}>
+      <section className="py-20 md:py-24">
         <Container className="max-w-3xl">
           <Reveal delay={0.12}>
             <SectionLabel index={statusIndex} title="Status" />
