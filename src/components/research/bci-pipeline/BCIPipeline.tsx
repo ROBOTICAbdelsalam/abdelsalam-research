@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
 import type { SignalTone } from "@/components/ui/SignalNode";
 import { useInView } from "@/components/3d/hooks";
 import { useReducedMotion } from "@/lib/useReducedMotion";
-import { PIPELINE_GROUPS, PIPELINE_NODES, type PipelineGroupId, type PipelineNode } from "@/data/bci-pipeline";
-import { PipelineNodeChip } from "./PipelineNodeChip";
-import { PipelineConnector } from "./PipelineConnector";
+import { PIPELINE_GROUPS, PIPELINE_NODES, VISUAL_NODES, type PipelineGroupId, type VisualNode } from "@/data/bci-pipeline";
+import { PipelineGroupRow } from "./PipelineGroupRow";
 import { PipelineDetailPanel } from "./PipelineDetailPanel";
 
 const GROUP_TONE: Record<PipelineGroupId, SignalTone> = {
@@ -22,31 +23,43 @@ const GROUP_TONE: Record<PipelineGroupId, SignalTone> = {
 
 // The tour advances one node every TICK_MS while the pipeline is in view,
 // motion is not reduced, and nothing is manually selected — a "controlled
-// speed", not a distraction (see the brief's own §3).
-const TICK_MS = 1100;
+// speed", not a distraction. It now travels the full flattened sequence
+// (every sub-lab is its own stop: Lab 01 → … → 07.1 → … → 14.7 → ROS2 →
+// Demo), matching the brief's exact §6 request, not the earlier
+// family-level-only tour.
+const TICK_MS = 900;
 
-type FlowItem =
-  | { kind: "header"; groupId: PipelineGroupId; label: string }
-  | { kind: "node"; node: PipelineNode; index: number }
-  | { kind: "connector"; index: number };
+type GroupEntry = { node: VisualNode; globalIndex: number };
 
-function buildFlowItems(): FlowItem[] {
-  const items: FlowItem[] = [];
-  let lastGroup: PipelineGroupId | null = null;
-  PIPELINE_NODES.forEach((node, index) => {
-    if (node.group !== lastGroup) {
-      const group = PIPELINE_GROUPS.find((g) => g.id === node.group)!;
-      items.push({ kind: "header", groupId: group.id, label: group.label });
-      lastGroup = node.group;
-    } else {
-      items.push({ kind: "connector", index });
-    }
-    items.push({ kind: "node", node, index });
+function buildGroupedEntries(): { groupId: PipelineGroupId; label: string; entries: GroupEntry[] }[] {
+  const byGroup = new Map<PipelineGroupId, GroupEntry[]>();
+  VISUAL_NODES.forEach((node, globalIndex) => {
+    const list = byGroup.get(node.group) ?? [];
+    list.push({ node, globalIndex });
+    byGroup.set(node.group, list);
   });
-  return items;
+  return PIPELINE_GROUPS.map((g) => ({ groupId: g.id, label: g.label, entries: byGroup.get(g.id) ?? [] }));
 }
 
-const FLOW_ITEMS = buildFlowItems();
+const GROUPED = buildGroupedEntries();
+
+function InterGroupConnector({ active, reducedMotion }: { active: boolean; reducedMotion: boolean }) {
+  const color = active ? "var(--trace)" : "var(--border-strong)";
+  return (
+    <div className="relative flex h-5 items-center pl-2" aria-hidden>
+      <ChevronDown size={13} style={{ color }} strokeWidth={1.75} />
+      {active && !reducedMotion && (
+        <motion.span
+          className="absolute left-2 h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: "var(--trace)", boxShadow: "0 0 6px var(--trace)" }}
+          initial={{ top: "-20%", opacity: 0 }}
+          animate={{ top: "100%", opacity: [0, 1, 1, 0] }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        />
+      )}
+    </div>
+  );
+}
 
 export function BCIPipeline() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -54,64 +67,66 @@ export function BCIPipeline() {
   const reducedMotion = useReducedMotion();
 
   const [tourIndex, setTourIndex] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null); // VisualNode id
 
   const running = inView && !reducedMotion && selectedId === null;
 
   useEffect(() => {
     if (!running) return;
     const id = window.setInterval(() => {
-      setTourIndex((i) => (i + 1) % PIPELINE_NODES.length);
+      setTourIndex((i) => (i + 1) % VISUAL_NODES.length);
     }, TICK_MS);
     return () => window.clearInterval(id);
   }, [running]);
 
-  const selectedNode = useMemo(() => PIPELINE_NODES.find((n) => n.id === selectedId) ?? null, [selectedId]);
-  const activeIndex = selectedId
-    ? PIPELINE_NODES.findIndex((n) => n.id === selectedId)
+  const selectedVisual = useMemo(() => VISUAL_NODES.find((n) => n.id === selectedId) ?? null, [selectedId]);
+  const selectedFamily = useMemo(
+    () => (selectedVisual ? (PIPELINE_NODES.find((n) => n.id === selectedVisual.familyId) ?? null) : null),
+    [selectedVisual],
+  );
+
+  const activeIndex = selectedVisual
+    ? VISUAL_NODES.findIndex((n) => n.id === selectedVisual.id)
     : reducedMotion
       ? -1
       : tourIndex;
 
-  const handleSelect = (node: PipelineNode, index: number) => {
+  const handleSelect = (node: VisualNode, globalIndex: number) => {
     setSelectedId((current) => (current === node.id ? null : node.id));
-    setTourIndex(index);
+    setTourIndex(globalIndex);
   };
 
-  const selectedTone = selectedNode ? GROUP_TONE[selectedNode.group] : "accent";
+  const selectedTone = selectedFamily ? GROUP_TONE[selectedFamily.group] : "accent";
 
   return (
     <div ref={rootRef}>
-      <div className="flex flex-col items-stretch gap-y-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-1">
-        {FLOW_ITEMS.map((item) => {
-          if (item.kind === "header") {
-            return (
-              <p
-                key={`h-${item.groupId}`}
-                className="mt-2 w-full font-mono text-[10px] uppercase tracking-[0.2em] text-muted first:mt-0"
-              >
-                {item.label}
-              </p>
-            );
-          }
-          if (item.kind === "connector") {
-            return <PipelineConnector key={`c-${item.index}`} active={activeIndex === item.index} reducedMotion={reducedMotion} />;
-          }
-          return (
-            <PipelineNodeChip
-              key={item.node.id}
-              node={item.node}
-              tone={GROUP_TONE[item.node.group]}
-              active={activeIndex === item.index}
-              selected={selectedId === item.node.id}
+      <div className="flex flex-col gap-3">
+        {GROUPED.map(({ groupId, label, entries }, gi) => (
+          <div key={groupId}>
+            {gi > 0 && (
+              <InterGroupConnector
+                active={entries.length > 0 && activeIndex === entries[0].globalIndex}
+                reducedMotion={reducedMotion}
+              />
+            )}
+            <PipelineGroupRow
+              label={label}
+              tone={GROUP_TONE[groupId]}
+              entries={entries.map((e) => ({ ...e, active: activeIndex === e.globalIndex }))}
+              selectedFamilyId={selectedVisual?.familyId ?? null}
               reducedMotion={reducedMotion}
-              onSelect={() => handleSelect(item.node, item.index)}
+              onSelect={handleSelect}
             />
-          );
-        })}
+          </div>
+        ))}
       </div>
 
-      <PipelineDetailPanel node={selectedNode} tone={selectedTone} onClose={() => setSelectedId(null)} />
+      <PipelineDetailPanel
+        node={selectedFamily}
+        tone={selectedTone}
+        highlightFile={selectedVisual?.file}
+        onClose={() => setSelectedId(null)}
+      />
     </div>
   );
 }

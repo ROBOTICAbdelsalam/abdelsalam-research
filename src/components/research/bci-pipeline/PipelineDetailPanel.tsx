@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { SignalTone } from "@/components/ui/SignalNode";
 import type { PipelineNode } from "@/data/bci-pipeline";
 
@@ -17,10 +18,12 @@ const FIELD_ROWS: readonly { key: keyof PipelineNode; label: string }[] = [
 export function PipelineDetailPanel({
   node,
   tone,
+  highlightFile,
   onClose,
 }: {
   node: PipelineNode | null;
   tone: SignalTone;
+  highlightFile?: string;
   onClose: () => void;
 }) {
   if (!node) return null;
@@ -89,15 +92,22 @@ export function PipelineDetailPanel({
         <div className="mt-6">
           <p className="font-mono text-[10px] uppercase tracking-wide text-muted mb-2">{node.title} — Steps</p>
           <ol className="flex flex-col divide-y divide-border rounded-xl border border-border">
-            {node.subSteps.map((step, i) => (
-              <li key={step.file} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5">
-                <span className="text-sm text-foreground/90">
-                  <span className="mr-2 font-mono text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
-                  {step.label}
-                </span>
-                <span className="font-mono text-[11px] text-muted">{step.file}</span>
-              </li>
-            ))}
+            {node.subSteps.map((step, i) => {
+              const isHighlighted = highlightFile === step.file;
+              return (
+                <li
+                  key={step.file}
+                  className={cn("flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5", isHighlighted && "bg-accent-soft")}
+                  style={isHighlighted ? { borderColor: color } : undefined}
+                >
+                  <span className={cn("text-sm", isHighlighted ? "font-medium text-accent" : "text-foreground/90")}>
+                    <span className="mr-2 font-mono text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
+                    {step.label}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted">{step.file}</span>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}

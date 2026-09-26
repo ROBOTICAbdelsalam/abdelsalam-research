@@ -3,26 +3,37 @@
 import { motion } from "framer-motion";
 import { FlaskConical, Network, Sparkles } from "lucide-react";
 import type { SignalTone } from "@/components/ui/SignalNode";
-import type { PipelineNode } from "@/data/bci-pipeline";
+import type { PipelineNodeKind } from "@/data/bci-pipeline";
 
 const KIND_ICON = { lab: FlaskConical, ros2: Network, demo: Sparkles } as const;
 
+// Compact, information-dense node — reference-image node shape (code +
+// title + real filename in a short card), not the earlier tall
+// icon-on-top chip. Kept short on purpose: many of these sit side by
+// side in one row (Lab 11 alone is 10), so height directly limits how
+// much of the pipeline is visible at once.
 export function PipelineNodeChip({
-  node,
+  code,
+  title,
+  file,
+  kind,
   tone,
   active,
   selected,
   reducedMotion,
   onSelect,
 }: {
-  node: PipelineNode;
+  code: string;
+  title: string;
+  file?: string;
+  kind: PipelineNodeKind;
   tone: SignalTone;
   active: boolean;
   selected: boolean;
   reducedMotion: boolean;
   onSelect: () => void;
 }) {
-  const Icon = KIND_ICON[node.kind];
+  const Icon = KIND_ICON[kind];
   const color = `var(--${tone})`;
   const lit = active || selected;
 
@@ -32,24 +43,24 @@ export function PipelineNodeChip({
       onClick={onSelect}
       aria-expanded={selected}
       aria-controls="bci-pipeline-detail"
-      aria-label={`${node.code} ${node.title} — view lab details`}
-      title={`${node.title} — ${node.purpose}`}
+      aria-label={`${code} ${title} — view lab details`}
+      title={file ? `${code} ${title} — ${file}` : `${code} ${title}`}
       animate={{
-        borderColor: lit ? color : "var(--border)",
-        scale: reducedMotion ? 1 : lit ? 1.045 : 1,
-        boxShadow: lit ? `0 0 0 1px ${color}33, 0 0 14px ${color}40` : "0 0 0 0 transparent",
+        borderColor: lit ? color : `${color}40`,
+        boxShadow: lit ? `0 0 0 1px ${color}55, 0 0 10px ${color}40` : "0 0 0 0 transparent",
       }}
-      transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="group flex w-[92px] shrink-0 flex-col items-center gap-1.5 rounded-xl border bg-surface px-2.5 py-3 text-center focus-visible:outline-2 focus-visible:outline-accent sm:w-[104px]"
+      transition={{ duration: reducedMotion ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}
+      style={{ backgroundColor: `${color}0d` }}
+      className="flex w-[132px] shrink-0 flex-col gap-1 rounded-lg border px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-accent sm:w-[142px]"
     >
-      <span
-        className="flex h-7 w-7 items-center justify-center rounded-lg border transition-colors"
-        style={{ borderColor: lit ? color : "var(--border)", color: lit ? color : "var(--muted)" }}
-      >
-        <Icon size={13} strokeWidth={1.75} aria-hidden />
+      <span className="flex items-center gap-1.5">
+        <Icon size={11} strokeWidth={1.75} style={{ color }} aria-hidden />
+        <span className="font-mono text-[9px] uppercase tracking-wider" style={{ color }}>
+          {code}
+        </span>
       </span>
-      <span className="font-mono text-[9px] uppercase tracking-wider text-muted">{node.code}</span>
-      <span className="text-[11px] font-medium leading-tight text-foreground line-clamp-2">{node.title}</span>
+      <span className="text-[11px] font-medium leading-tight text-foreground line-clamp-2">{title}</span>
+      {file && <span className="truncate font-mono text-[8.5px] leading-tight text-muted/80">{file}</span>}
     </motion.button>
   );
 }

@@ -428,3 +428,49 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${REPO_FACTS.status} — ${REPO_FACTS.statusDetail}`,
   },
 ];
+
+// ---------------------------------------------------------------------
+// Visual QA correction (dense reference-diagram pass): the main pipeline
+// must show every sub-lab as its own node — Lab 07.1, 07.2, … not one
+// collapsed "Lab 07" card — matching the supplied reference image's
+// row-based density. PIPELINE_NODES above is untouched (it stays the
+// source of truth for each lab-family's purpose/input/processing/output/
+// technology, still shown in the shared detail panel); this is a pure,
+// derived flattening for what the main flow actually renders. A family
+// with sub-steps contributes one VisualNode per sub-step (code becomes
+// "07.1", "07.2", … from the family's own code); a family with none
+// (Labs 01–06, every ROS2 stage, the demo) contributes exactly one.
+export type VisualNode = {
+  id: string;
+  familyId: string;
+  code: string;
+  title: string;
+  file?: string;
+  group: PipelineGroupId;
+  kind: PipelineNodeKind;
+};
+
+export const VISUAL_NODES: readonly VisualNode[] = PIPELINE_NODES.flatMap((node) => {
+  if (!node.subSteps || node.subSteps.length === 0) {
+    return [
+      {
+        id: node.id,
+        familyId: node.id,
+        code: node.code,
+        title: node.title,
+        file: node.script,
+        group: node.group,
+        kind: node.kind,
+      },
+    ];
+  }
+  return node.subSteps.map((step, i) => ({
+    id: `${node.id}-${i + 1}`,
+    familyId: node.id,
+    code: `${node.code}.${i + 1}`,
+    title: step.label,
+    file: step.file,
+    group: node.group,
+    kind: node.kind,
+  }));
+});
