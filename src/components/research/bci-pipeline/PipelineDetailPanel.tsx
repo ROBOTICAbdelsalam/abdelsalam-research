@@ -1,10 +1,11 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { GithubIcon } from "@/components/icons/BrandIcons";
 import type { SignalTone } from "@/components/ui/SignalNode";
-import type { PipelineNode, PipelineVisual } from "@/data/bci-pipeline";
+import { githubUrlFor, type PipelineNode, type PipelineVisual } from "@/data/bci-pipeline";
 
 // One shared detail panel for the whole pipeline — the same pattern
 // BCIInfoPanel already uses for the 3D digital twin's station focus
@@ -42,6 +43,47 @@ function DetailFigure({ visual, tone }: { visual: PipelineVisual; tone: SignalTo
       <p className="mt-1.5 font-mono text-[9px] uppercase tracking-wide text-muted/70">
         {isReal ? "Real project figure" : "Illustrative diagram — no experimental result"} · {visual.alt}
       </p>
+    </div>
+  );
+}
+
+// A research citation, not a call-to-action — small inline text, a
+// small brand icon, an external-link glyph, hover-only color change.
+// `path` is whichever specific thing the visitor actually selected: the
+// clicked sub-step's own file when one is selected (via `highlightFile`,
+// already wired through for the steps-list highlight below), or the
+// family's own `script` for a standalone node (Labs 01–06, ROS2 stages,
+// the demo). A sub-step's own file is always a single script, so its
+// link type is always "file"; a standalone node's `githubType` decides
+// file vs directory (only Robot Abstraction is a directory — five
+// co-equal files, no single canonical one).
+function SourceCitation({ node, highlightFile }: { node: PipelineNode; highlightFile?: string }) {
+  const path = highlightFile ?? node.script;
+  if (!path) return null;
+
+  const isSubStepFile = Boolean(node.subSteps?.some((s) => s.file === path));
+  const type = isSubStepFile ? "file" : (node.githubType ?? "file");
+  const href = githubUrlFor(path, type);
+
+  return (
+    <div className="mt-5">
+      <p className="font-mono text-[10px] uppercase tracking-wide text-muted">Source</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <span className="max-w-full truncate font-mono text-xs text-foreground/80" title={path}>
+          {path}
+        </span>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${path} on GitHub (opens in a new tab)`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded font-mono text-[11px] uppercase tracking-wide text-muted transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <GithubIcon size={12} aria-hidden />
+          View Source on GitHub
+          <ExternalLink size={10} aria-hidden />
+        </a>
+      </div>
     </div>
   );
 }
@@ -116,12 +158,7 @@ export function PipelineDetailPanel({
         </div>
       )}
 
-      {node.script && (
-        <p className="mt-5 font-mono text-xs text-muted">
-          <span className="uppercase tracking-wide text-muted/70">Script — </span>
-          <span className="text-accent">{node.script}</span>
-        </p>
-      )}
+      <SourceCitation node={node} highlightFile={highlightFile} />
 
       {node.subSteps && node.subSteps.length > 0 && (
         <div className="mt-6">

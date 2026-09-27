@@ -10,6 +10,24 @@
 // Where the repository doesn't give a per-script figure/visualization,
 // that field is simply left out — nothing here is invented.
 //
+// GITHUB SOURCE LINKS (added in the "link every detail to its verified
+// source" pass): `script` (family-level) and `subSteps[].file`
+// (per-sub-step) already held the real, verified repo-relative path for
+// every one of the 63 Lab 01–14 scripts — that's the exact same string
+// this pass reuses as the GitHub link target, so there is nothing new to
+// verify there and no way for the displayed path and the link to drift
+// apart. What *is* new: the 8 ROS2 stage nodes and the End-to-End Demo
+// previously had no per-node source path (ROS2 nodes only carried
+// `technology`/`purpose` text); each now has a `script` pointing at one
+// real, individually verified file or directory inside
+// ros2_workspace/src/ (fetched and confirmed directly against the
+// repository's own directory listings — see below). `githubType`
+// defaults to "file" and is only set to "directory" where multiple
+// co-equal files collectively implement a stage (only Robot
+// Abstraction — gesture_library/robot_interface/robot_node/
+// robot_registry/robotic_hand_interface — five files, no single one of
+// which represents "the" implementation).
+//
 // VISUAL FIGURES (added in the "real research figures" pass): every
 // `visual` below with `kind: "experimental"` points at a real PNG
 // fetched directly from the thesis repository's own `figures/` /
@@ -101,6 +119,7 @@ export type PipelineVisual =
 
 export type PipelineSubStep = { label: string; file: string; visual?: PipelineVisual };
 export type PipelineNodeKind = "lab" | "ros2" | "demo";
+export type GithubSourceType = "file" | "directory";
 
 export type PipelineNode = {
   id: string;
@@ -114,9 +133,21 @@ export type PipelineNode = {
   output?: string;
   technology?: readonly string[];
   script?: string;
+  /** Only meaningful when `script` is a directory rather than a single file — defaults to "file". */
+  githubType?: GithubSourceType;
   visual?: PipelineVisual;
   subSteps?: readonly PipelineSubStep[];
 };
+
+// The single repository every "View Source on GitHub" link resolves
+// against — every `script`/`subSteps[].file` path in this file is
+// relative to this repo's `main` branch, verified directly against its
+// own directory listings (labs/, ros2_workspace/src/), never guessed.
+export const GITHUB_REPO_URL = "https://github.com/ROBOTICAbdelsalam/-Hybrid-Adaptive-BCI-Thesis-";
+
+export function githubUrlFor(path: string, type: GithubSourceType = "file"): string {
+  return `${GITHUB_REPO_URL}/${type === "directory" ? "tree" : "blob"}/main/${path}`;
+}
 
 const modelLine = (names: readonly string[]) =>
   MODEL_RESULTS.filter((m) => names.includes(m.model))
@@ -434,7 +465,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     input: "realtime_predictions.csv (Lab 14, file seam)",
     output: `/bci/command · gated at ${LIVE_GATE_THRESHOLD.toFixed(2)}`,
     technology: ["ROS2 Jazzy", "rclpy"],
-    script: "ros2_workspace/src/bci_bridge",
+    script: "ros2_workspace/src/bci_bridge/bci_bridge/bridge_node.py",
     visual: icon("nodegraph", "ROS2 node graph diagram — BCI Bridge"),
   },
   {
@@ -447,7 +478,8 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     input: "/bci/command",
     output: "/bci/joint_targets (normalised)",
     technology: ["ROS2 Jazzy"],
-    script: "ros2_workspace/src/bci_robot_abstraction",
+    script: "ros2_workspace/src/bci_robot_abstraction/bci_robot_abstraction",
+    githubType: "directory",
     visual: icon("nodegraph", "ROS2 node graph diagram — Robot Abstraction"),
   },
   {
@@ -460,7 +492,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     input: "/bci/joint_targets",
     output: "/hand_controller/joint_trajectory (radians)",
     technology: ["ROS2 Jazzy"],
-    script: "ros2_workspace/src/bci_bringup",
+    script: "ros2_workspace/src/bci_bringup/bci_bringup/trajectory_adapter.py",
     visual: icon("nodegraph", "ROS2 node graph diagram — ROS2 Bringup"),
   },
   {
@@ -473,6 +505,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     input: "/hand_controller/joint_trajectory",
     processing: GAZEBO_MOVEIT_FACTS.controllers.join(" · "),
     technology: [GAZEBO_MOVEIT_FACTS.controlFramework],
+    script: "ros2_workspace/src/bci_hand_description/config/hand_controllers.yaml",
     visual: icon("nodegraph", "ROS2 node graph diagram — ROS2 Control"),
   },
   {
@@ -483,6 +516,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     kind: "ros2",
     purpose: "Simulate the robotic hand's physical response to the commanded trajectory.",
     technology: [GAZEBO_MOVEIT_FACTS.simulator],
+    script: "ros2_workspace/src/bci_hand_description/launch/gazebo.launch.py",
     visual: icon("nodegraph", "ROS2 node graph diagram — Gazebo Simulation"),
   },
   {
@@ -494,6 +528,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose: "Plan motion to one of the hand's named gesture states.",
     output: `${GAZEBO_MOVEIT_FACTS.planningGroup} · ${GAZEBO_MOVEIT_FACTS.namedStates} named states`,
     technology: [GAZEBO_MOVEIT_FACTS.planner, GAZEBO_MOVEIT_FACTS.planningLibrary],
+    script: "ros2_workspace/src/bci_hand_moveit_config/launch/move_group.launch.py",
     visual: icon("nodegraph", "ROS2 node graph diagram — MoveIt2"),
   },
   {
@@ -505,6 +540,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose: "Publish robot feedback for any monitoring client.",
     output: "/bci/robot_state",
     technology: ["ROS2 Jazzy"],
+    script: "ros2_workspace/src/bci_interfaces/msg/RobotState.msg",
     visual: icon("nodegraph", "ROS2 node graph diagram — Robot State Monitoring"),
   },
   {
@@ -515,6 +551,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     kind: "ros2",
     purpose: "Execute the planned trajectory on the simulated robotic hand.",
     technology: ["ros2_control", GAZEBO_MOVEIT_FACTS.simulator],
+    script: "ros2_workspace/src/bci_hand_description/urdf/bci_hand.urdf.xacro",
     visual: icon("nodegraph", "ROS2 node graph diagram — Robot Control"),
   },
 
@@ -530,6 +567,10 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose:
       "Chains every stage above into one command → decision → simulated motion path — a bundled, high-confidence prediction, not a live-EEG-to-hardware demonstration.",
     output: `${REPO_FACTS.status} — ${REPO_FACTS.statusDetail}`,
+    // The exact command README.md's own Quick Start documents for running
+    // the full pipeline end-to-end: `ros2 launch bci_bringup
+    // bci_system.launch.py` — this file is that launch entry point.
+    script: "ros2_workspace/src/bci_bringup/launch/bci_system.launch.py",
     visual: { kind: "technical", src: `${FIG}/hybrid_adaptive_bci_end_to_end_architecture.png`, alt: "Hybrid-Adaptive BCI end-to-end system architecture diagram" },
   },
 ];
