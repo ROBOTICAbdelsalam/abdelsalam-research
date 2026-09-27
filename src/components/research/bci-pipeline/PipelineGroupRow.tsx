@@ -46,6 +46,7 @@ export function PipelineGroupRow({
                 code={node.code}
                 title={node.title}
                 file={node.file}
+                visual={node.visual}
                 kind={node.kind}
                 tone={tone}
                 active={active}

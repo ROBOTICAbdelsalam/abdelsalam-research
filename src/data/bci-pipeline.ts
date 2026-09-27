@@ -9,6 +9,26 @@
 //
 // Where the repository doesn't give a per-script figure/visualization,
 // that field is simply left out — nothing here is invented.
+//
+// VISUAL FIGURES (added in the "real research figures" pass): every
+// `visual` below with `kind: "experimental"` points at a real PNG
+// fetched directly from the thesis repository's own `figures/` /
+// `docs/images/` directories (identical sets), downloaded, verified as
+// a genuine legible plot, and re-encoded into public/images/bci-pipeline/
+// — nothing was generated or fabricated. Two small clusters of those real
+// files are byte-for-byte identical in the SOURCE REPOSITORY itself
+// (confirmed via checksum, not a download error here): lab07's manual/
+// auto/before-after cleaned-EEG trio, and lab08's epoch/baseline-
+// correction/epoch-visualization trio. They're used as-is (each is the
+// repo's own correctly-named output for that exact script) rather than
+// silently deduplicated. Repository directories confirmed to contain NO
+// images at all (checked directly): `adaptive_ai/` (Lab 13, CSVs only)
+// and `realtime/results/` (Lab 14, TXT/CSV only) — every Lab 13/14 node
+// below therefore uses a plain schematic icon, never a chart.
+// `kind: "technical"` with an `icon` is one of a small, fixed set of
+// abstract Lucide icons (see PipelineNodeChip's ICON_MAP) — deliberately
+// not a generated chart, so it can never be mistaken for an
+// experimental result.
 
 import {
   EEG_DATASET,
@@ -45,7 +65,41 @@ export const PIPELINE_GROUPS: readonly PipelineGroup[] = [
   { id: "ros2-control", label: "08 · ROS2 Robot Control" },
 ];
 
-export type PipelineSubStep = { label: string; file: string };
+// A fixed, small vocabulary of abstract technical icons — see
+// PipelineNodeChip.tsx's ICON_MAP for the actual Lucide components.
+// Never a generated chart; always visually distinguishable from a real
+// figure thumbnail.
+export type TechnicalIconKey =
+  | "setup"
+  | "database"
+  | "file"
+  | "select"
+  | "detect"
+  | "split"
+  | "tag"
+  | "save"
+  | "report"
+  | "metrics"
+  | "theory"
+  | "filter"
+  | "feedback"
+  | "gate"
+  | "loop"
+  | "update"
+  | "trend"
+  | "stream"
+  | "cpu"
+  | "target"
+  | "terminal"
+  | "activity"
+  | "nodegraph";
+
+export type PipelineVisual =
+  | { kind: "experimental"; src: string; alt: string }
+  | { kind: "technical"; src: string; alt: string } // a real but non-experimental project diagram
+  | { kind: "technical"; icon: TechnicalIconKey; alt: string }; // an abstract illustrative icon, no source file
+
+export type PipelineSubStep = { label: string; file: string; visual?: PipelineVisual };
 export type PipelineNodeKind = "lab" | "ros2" | "demo";
 
 export type PipelineNode = {
@@ -60,6 +114,7 @@ export type PipelineNode = {
   output?: string;
   technology?: readonly string[];
   script?: string;
+  visual?: PipelineVisual;
   subSteps?: readonly PipelineSubStep[];
 };
 
@@ -67,6 +122,10 @@ const modelLine = (names: readonly string[]) =>
   MODEL_RESULTS.filter((m) => names.includes(m.model))
     .map((m) => `${m.model} ${m.accuracy.toFixed(2)}`)
     .join(" · ");
+
+const FIG = "/images/bci-pipeline";
+const exp = (file: string, alt: string): PipelineVisual => ({ kind: "experimental", src: `${FIG}/${file}`, alt });
+const icon = (key: TechnicalIconKey, alt: string): PipelineVisual => ({ kind: "technical", icon: key, alt });
 
 export const PIPELINE_NODES: readonly PipelineNode[] = [
   // ---- 01 Environment & EEG Data (Labs 01–06, each a standalone script) ----
@@ -81,6 +140,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Configured local pipeline environment",
     technology: ["Python 3.12"],
     script: "labs/lab01_setup.py",
+    visual: icon("setup", "Environment setup diagram"),
   },
   {
     id: "lab02",
@@ -94,6 +154,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Raw EEG object in memory",
     technology: ["MNE-Python"],
     script: "labs/lab02_load_eeg.py",
+    visual: icon("database", "Dataset loading diagram"),
   },
   {
     id: "lab03",
@@ -107,6 +168,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${EEG_DATASET.channels}-channel raw signal @ ${EEG_DATASET.sampleRateHz} Hz`,
     technology: ["MNE-Python"],
     script: "labs/lab03_read_edf.py",
+    visual: icon("file", "EDF file structure diagram"),
   },
   {
     id: "lab04",
@@ -120,6 +182,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Visual raw-signal inspection",
     technology: ["MNE-Python", "Matplotlib"],
     script: "labs/lab04_plot_raw.py",
+    visual: exp("lab04_raw_eeg.png", "Raw multi-channel EEG signal waveform"),
   },
   {
     id: "lab05",
@@ -133,6 +196,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${EEG_DATASET.channels} channels · ${EEG_DATASET.sampleRateHz} Hz · ${EEG_DATASET.classes} classes`,
     technology: ["MNE-Python"],
     script: "labs/lab05_dataset_info.py",
+    visual: icon("database", "Dataset metadata summary diagram"),
   },
   {
     id: "lab06",
@@ -146,6 +210,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Filtered EEG signal",
     technology: ["MNE-Python", "SciPy"],
     script: "labs/lab06_filter_eeg.py",
+    visual: exp("lab06_filtered_eeg.png", "Band-pass filtered EEG signal waveform"),
   },
 
   // ---- 02 Signal Preprocessing (Lab 07 ICA, Lab 08 Epoching) ----
@@ -161,13 +226,29 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Artifact-cleaned EEG",
     technology: ["MNE-Python", "ICA"],
     subSteps: [
-      { label: "ICA Training", file: "labs/lab07_01_ica_fit.py" },
-      { label: "ICA Components Visualization", file: "labs/lab07_02_plot_ica.py" },
-      { label: "Manual Component Selection", file: "labs/lab07_03_manual_component_selection.py" },
-      { label: "Automatic Artifact Detection", file: "labs/lab07_04_auto_component_detection.py" },
-      { label: "Manual Artifact Removal", file: "labs/lab07_05_artifact_removal.py" },
-      { label: "Automatic Artifact Removal", file: "labs/lab07_06_auto_artifact_removal.py" },
-      { label: "Before / After Comparison", file: "labs/lab07_07_before_after_comparison.py" },
+      { label: "ICA Training", file: "labs/lab07_01_ica_fit.py", visual: exp("lab07_ica_sources.png", "ICA-separated EEG source components") },
+      {
+        label: "ICA Components Visualization",
+        file: "labs/lab07_02_plot_ica.py",
+        visual: exp("lab07_ica_components_page_1.png", "ICA component topography montage"),
+      },
+      { label: "Manual Component Selection", file: "labs/lab07_03_manual_component_selection.py", visual: icon("select", "Manual component selection diagram") },
+      { label: "Automatic Artifact Detection", file: "labs/lab07_04_auto_component_detection.py", visual: icon("detect", "Automatic artifact detection diagram") },
+      {
+        label: "Manual Artifact Removal",
+        file: "labs/lab07_05_artifact_removal.py",
+        visual: exp("lab07_manual_cleaned_eeg.png", "EEG signal after manual artifact removal"),
+      },
+      {
+        label: "Automatic Artifact Removal",
+        file: "labs/lab07_06_auto_artifact_removal.py",
+        visual: exp("lab07_auto_cleaned_eeg.png", "EEG signal after automatic artifact removal"),
+      },
+      {
+        label: "Before / After Comparison",
+        file: "labs/lab07_07_before_after_comparison.py",
+        visual: exp("lab07_cleaned_eeg.png", "Cleaned EEG signal after ICA-based artifact removal"),
+      },
     ],
   },
   {
@@ -182,13 +263,13 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${EEG_DATASET.epochs} processed epochs`,
     technology: ["MNE-Python"],
     subSteps: [
-      { label: "Event Extraction", file: "labs/lab08_01_event_extraction.py" },
-      { label: "Epoch Creation", file: "labs/lab08_02_epoch_creation.py" },
-      { label: "Baseline Correction", file: "labs/lab08_03_baseline_correction.py" },
-      { label: "Epoch Visualization", file: "labs/lab08_04_epoch_visualization.py" },
-      { label: "Epoch Quality Check", file: "labs/lab08_05_epoch_quality_check.py" },
-      { label: "Save Processed Epochs", file: "labs/lab08_06_save_processed_epochs.py" },
-      { label: "Epoch Summary Report", file: "labs/lab08_07_epoch_summary_report.py" },
+      { label: "Event Extraction", file: "labs/lab08_01_event_extraction.py", visual: exp("lab08_events.png", "Extracted event markers across the EEG recording") },
+      { label: "Epoch Creation", file: "labs/lab08_02_epoch_creation.py", visual: exp("lab08_epochs.png", "Segmented EEG epochs") },
+      { label: "Baseline Correction", file: "labs/lab08_03_baseline_correction.py", visual: exp("lab08_baseline_correction.png", "Baseline-corrected EEG epochs") },
+      { label: "Epoch Visualization", file: "labs/lab08_04_epoch_visualization.py", visual: exp("lab08_epoch_visualization.png", "Epoch visualization across channels") },
+      { label: "Epoch Quality Check", file: "labs/lab08_05_epoch_quality_check.py", visual: exp("lab08_epoch_quality.png", "Epoch quality check plot") },
+      { label: "Save Processed Epochs", file: "labs/lab08_06_save_processed_epochs.py", visual: icon("save", "Save processed epochs diagram") },
+      { label: "Epoch Summary Report", file: "labs/lab08_07_epoch_summary_report.py", visual: icon("report", "Epoch summary report diagram") },
     ],
   },
 
@@ -205,13 +286,13 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "Per-epoch feature set",
     technology: ["MNE-Python", "SciPy", "NumPy"],
     subSteps: [
-      { label: "Time-Domain Features", file: "labs/lab09_01_time_domain_features.py" },
-      { label: "Frequency-Domain Features", file: "labs/lab09_02_frequency_domain_features.py" },
-      { label: "Power Spectral Density", file: "labs/lab09_03_power_spectral_density.py" },
-      { label: "Band Power Extraction", file: "labs/lab09_04_band_power_extraction.py" },
-      { label: "Statistical Features", file: "labs/lab09_05_statistical_features.py" },
-      { label: "Feature Selection", file: "labs/lab09_06_feature_selection.py" },
-      { label: "Feature Summary Report", file: "labs/lab09_07_feature_summary_report.py" },
+      { label: "Time-Domain Features", file: "labs/lab09_01_time_domain_features.py", visual: exp("lab09_time_features.png", "Time-domain EEG feature plot") },
+      { label: "Frequency-Domain Features", file: "labs/lab09_02_frequency_domain_features.py", visual: exp("lab09_frequency_features.png", "Frequency-domain EEG feature plot") },
+      { label: "Power Spectral Density", file: "labs/lab09_03_power_spectral_density.py", visual: exp("lab09_psd.png", "Power spectral density plot") },
+      { label: "Band Power Extraction", file: "labs/lab09_04_band_power_extraction.py", visual: exp("lab09_band_power.png", "Band-power extraction plot") },
+      { label: "Statistical Features", file: "labs/lab09_05_statistical_features.py", visual: exp("lab09_statistical_features.png", "Statistical EEG feature plot") },
+      { label: "Feature Selection", file: "labs/lab09_06_feature_selection.py", visual: icon("select", "Feature selection diagram") },
+      { label: "Feature Summary Report", file: "labs/lab09_07_feature_summary_report.py", visual: icon("report", "Feature summary report diagram") },
     ],
   },
   {
@@ -226,12 +307,12 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${CSP_FACTS.components} CSP components per epoch`,
     technology: ["MNE-Python (CSP)"],
     subSteps: [
-      { label: "CSP Theory", file: "labs/lab10_01_csp_theory.py" },
-      { label: "Train CSP", file: "labs/lab10_02_train_csp.py" },
-      { label: "Transform EEG Signals", file: "labs/lab10_03_transform_eeg_signals.py" },
-      { label: "CSP Feature Analysis", file: "labs/lab10_04_csp_feature_analysis.py" },
-      { label: "Save CSP Features", file: "labs/lab10_05_save_csp_features.py" },
-      { label: "CSP Report", file: "labs/lab10_06_csp_report.py" },
+      { label: "CSP Theory", file: "labs/lab10_01_csp_theory.py", visual: icon("theory", "CSP theory diagram") },
+      { label: "Train CSP", file: "labs/lab10_02_train_csp.py", visual: icon("filter", "CSP spatial-filter training diagram") },
+      { label: "Transform EEG Signals", file: "labs/lab10_03_transform_eeg_signals.py", visual: exp("lab10_csp_features.png", "CSP-transformed feature scatter plot") },
+      { label: "CSP Feature Analysis", file: "labs/lab10_04_csp_feature_analysis.py", visual: exp("lab10_csp_correlation.png", "CSP feature correlation plot") },
+      { label: "Save CSP Features", file: "labs/lab10_05_save_csp_features.py", visual: icon("save", "Save CSP features diagram") },
+      { label: "CSP Report", file: "labs/lab10_06_csp_report.py", visual: icon("report", "CSP report diagram") },
     ],
   },
 
@@ -248,16 +329,16 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: modelLine(["SVM", "Random Forest", "XGBoost"]),
     technology: ["scikit-learn", "XGBoost"],
     subSteps: [
-      { label: "Dataset Preparation", file: "labs/lab11_01_dataset_preparation.py" },
-      { label: "Create Labels", file: "labs/lab11_02_create_labels.py" },
-      { label: "Train / Test Split", file: "labs/lab11_03_train_test_split.py" },
-      { label: "SVM Classifier", file: "labs/lab11_04_svm_classifier.py" },
-      { label: "Random Forest", file: "labs/lab11_05_random_forest.py" },
-      { label: "XGBoost Classifier", file: "labs/lab11_06_xgboost_classifier.py" },
-      { label: "Model Comparison", file: "labs/lab11_07_model_comparison.py" },
-      { label: "Performance Evaluation", file: "labs/lab11_08_performance_evaluation.py" },
-      { label: "Save Best Model", file: "labs/lab11_09_save_best_model.py" },
-      { label: "Save CSP Model", file: "labs/lab11_10_save_csp_model.py" },
+      { label: "Dataset Preparation", file: "labs/lab11_01_dataset_preparation.py", visual: icon("database", "Dataset preparation diagram") },
+      { label: "Create Labels", file: "labs/lab11_02_create_labels.py", visual: icon("tag", "Label creation diagram") },
+      { label: "Train / Test Split", file: "labs/lab11_03_train_test_split.py", visual: icon("split", "Train/test split diagram") },
+      { label: "SVM Classifier", file: "labs/lab11_04_svm_classifier.py", visual: exp("lab11_svm_confusion_matrix.png", "SVM classifier confusion matrix") },
+      { label: "Random Forest", file: "labs/lab11_05_random_forest.py", visual: exp("lab11_random_forest_confusion_matrix.png", "Random Forest classifier confusion matrix") },
+      { label: "XGBoost Classifier", file: "labs/lab11_06_xgboost_classifier.py", visual: exp("lab11_xgboost_confusion_matrix.png", "XGBoost classifier confusion matrix") },
+      { label: "Model Comparison", file: "labs/lab11_07_model_comparison.py", visual: exp("lab11_model_comparison.png", "Classical model accuracy comparison chart") },
+      { label: "Performance Evaluation", file: "labs/lab11_08_performance_evaluation.py", visual: icon("metrics", "Performance evaluation diagram") },
+      { label: "Save Best Model", file: "labs/lab11_09_save_best_model.py", visual: icon("save", "Save best model diagram") },
+      { label: "Save CSP Model", file: "labs/lab11_10_save_csp_model.py", visual: icon("save", "Save CSP model diagram") },
     ],
   },
 
@@ -274,17 +355,26 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `${modelLine(["CNN", "LSTM", "CNN-LSTM"])} · deployed: ${DEPLOYED_MODEL.name} (≈${DEPLOYED_MODEL.sizeKB} KB)`,
     technology: ["TensorFlow", "Keras"],
     subSteps: [
-      { label: "Dataset Preparation", file: "labs/lab12_01_dataset_preparation.py" },
-      { label: "CNN Classifier", file: "labs/lab12_02_cnn_classifier.py" },
-      { label: "LSTM Classifier", file: "labs/lab12_03_lstm_classifier.py" },
-      { label: "CNN-LSTM Classifier", file: "labs/lab12_04_cnn_lstm_classifier.py" },
-      { label: "Model Comparison", file: "labs/lab12_05_model_comparison.py" },
-      { label: "Performance Evaluation", file: "labs/lab12_06_performance_evaluation.py" },
-      { label: "Save Best Model", file: "labs/lab12_07_save_best_model.py" },
+      { label: "Dataset Preparation", file: "labs/lab12_01_dataset_preparation.py", visual: icon("database", "Dataset preparation diagram") },
+      { label: "CNN Classifier", file: "labs/lab12_02_cnn_classifier.py", visual: exp("lab12_cnn_accuracy.png", "CNN training and validation accuracy curve") },
+      { label: "LSTM Classifier", file: "labs/lab12_03_lstm_classifier.py", visual: exp("lab12_lstm_accuracy.png", "LSTM training and validation accuracy curve") },
+      {
+        label: "CNN-LSTM Classifier",
+        file: "labs/lab12_04_cnn_lstm_classifier.py",
+        visual: exp("lab12_cnn_lstm_accuracy.png", "CNN-LSTM (deployed model) training and validation accuracy curve"),
+      },
+      { label: "Model Comparison", file: "labs/lab12_05_model_comparison.py", visual: exp("lab12_model_accuracy.png", "Deep learning model accuracy comparison chart") },
+      {
+        label: "Performance Evaluation",
+        file: "labs/lab12_06_performance_evaluation.py",
+        visual: exp("lab12_cnn_lstm_confusion_matrix.png", "CNN-LSTM (deployed model) confusion matrix"),
+      },
+      { label: "Save Best Model", file: "labs/lab12_07_save_best_model.py", visual: icon("save", "Save best model diagram") },
     ],
   },
 
-  // ---- 06 Adaptive AI (Lab 13) ----
+  // ---- 06 Adaptive AI (Lab 13) — no images exist anywhere in the
+  // repository for this lab (adaptive_ai/ holds only CSVs, confirmed) ----
   {
     id: "lab13",
     group: "adaptive-ai",
@@ -297,16 +387,18 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `Cold-start threshold ${ADAPTIVE_LAYER_STATE.coldStartThreshold.toFixed(2)} · status ${ADAPTIVE_LAYER_STATE.status}`,
     technology: ["NumPy", "SciPy"],
     subSteps: [
-      { label: "User Feedback Integration", file: "labs/lab13_01_user_feedback.py" },
-      { label: "Adaptive Threshold", file: "labs/lab13_02_adaptive_threshold.py" },
-      { label: "Online Learning", file: "labs/lab13_03_online_learning.py" },
-      { label: "Adaptive Classifier Update", file: "labs/lab13_04_adaptive_classifier_update.py" },
-      { label: "Performance Adaptation", file: "labs/lab13_05_performance_adaptation.py" },
-      { label: "Adaptive AI Report", file: "labs/lab13_06_adaptive_ai_report.py" },
+      { label: "User Feedback Integration", file: "labs/lab13_01_user_feedback.py", visual: icon("feedback", "User feedback integration diagram") },
+      { label: "Adaptive Threshold", file: "labs/lab13_02_adaptive_threshold.py", visual: icon("gate", "Adaptive threshold gate diagram") },
+      { label: "Online Learning", file: "labs/lab13_03_online_learning.py", visual: icon("loop", "Online learning loop diagram") },
+      { label: "Adaptive Classifier Update", file: "labs/lab13_04_adaptive_classifier_update.py", visual: icon("update", "Adaptive classifier update diagram") },
+      { label: "Performance Adaptation", file: "labs/lab13_05_performance_adaptation.py", visual: icon("trend", "Performance adaptation diagram") },
+      { label: "Adaptive AI Report", file: "labs/lab13_06_adaptive_ai_report.py", visual: icon("report", "Adaptive AI report diagram") },
     ],
   },
 
-  // ---- 07 Real-Time System (Lab 14) ----
+  // ---- 07 Real-Time System (Lab 14) — no images exist anywhere in the
+  // repository for this lab (realtime/results/ holds only TXT/CSV,
+  // confirmed) ----
   {
     id: "lab14",
     group: "real-time-system",
@@ -319,17 +411,19 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "realtime_predictions.csv / realtime_commands.csv",
     technology: ["Python", "Pandas"],
     subSteps: [
-      { label: "Live EEG Streaming (Simulated)", file: "labs/lab14_01_live_eeg_streaming.py" },
-      { label: "Real-Time Preprocessing", file: "labs/lab14_02_real_time_preprocessing.py" },
-      { label: "Online CSP Feature Extraction", file: "labs/lab14_03_online_csp_feature_extraction.py" },
-      { label: "Real-Time Prediction", file: "labs/lab14_04_real_time_prediction.py" },
-      { label: "Command Generation", file: "labs/lab14_05_command_generation.py" },
-      { label: "Performance Monitoring", file: "labs/lab14_06_performance_monitoring.py" },
-      { label: "Real-Time System Report", file: "labs/lab14_07_real_time_system_report.py" },
+      { label: "Live EEG Streaming (Simulated)", file: "labs/lab14_01_live_eeg_streaming.py", visual: icon("stream", "Live EEG streaming diagram") },
+      { label: "Real-Time Preprocessing", file: "labs/lab14_02_real_time_preprocessing.py", visual: icon("filter", "Real-time preprocessing diagram") },
+      { label: "Online CSP Feature Extraction", file: "labs/lab14_03_online_csp_feature_extraction.py", visual: icon("cpu", "Online CSP feature extraction diagram") },
+      { label: "Real-Time Prediction", file: "labs/lab14_04_real_time_prediction.py", visual: icon("target", "Real-time prediction diagram") },
+      { label: "Command Generation", file: "labs/lab14_05_command_generation.py", visual: icon("terminal", "Command generation diagram") },
+      { label: "Performance Monitoring", file: "labs/lab14_06_performance_monitoring.py", visual: icon("activity", "Performance monitoring diagram") },
+      { label: "Real-Time System Report", file: "labs/lab14_07_real_time_system_report.py", visual: icon("report", "Real-time system report diagram") },
     ],
   },
 
-  // ---- 08 ROS2 Robot Control ----
+  // ---- 08 ROS2 Robot Control — no per-package figure exists; every
+  // stage shares the same abstract node-graph icon rather than repeating
+  // one real image across eight unrelated packages. ----
   {
     id: "ros2-bridge",
     group: "ros2-control",
@@ -341,6 +435,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: `/bci/command · gated at ${LIVE_GATE_THRESHOLD.toFixed(2)}`,
     technology: ["ROS2 Jazzy", "rclpy"],
     script: "ros2_workspace/src/bci_bridge",
+    visual: icon("nodegraph", "ROS2 node graph diagram — BCI Bridge"),
   },
   {
     id: "ros2-abstraction",
@@ -353,6 +448,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "/bci/joint_targets (normalised)",
     technology: ["ROS2 Jazzy"],
     script: "ros2_workspace/src/bci_robot_abstraction",
+    visual: icon("nodegraph", "ROS2 node graph diagram — Robot Abstraction"),
   },
   {
     id: "ros2-bringup",
@@ -365,6 +461,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     output: "/hand_controller/joint_trajectory (radians)",
     technology: ["ROS2 Jazzy"],
     script: "ros2_workspace/src/bci_bringup",
+    visual: icon("nodegraph", "ROS2 node graph diagram — ROS2 Bringup"),
   },
   {
     id: "ros2-control-layer",
@@ -376,6 +473,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     input: "/hand_controller/joint_trajectory",
     processing: GAZEBO_MOVEIT_FACTS.controllers.join(" · "),
     technology: [GAZEBO_MOVEIT_FACTS.controlFramework],
+    visual: icon("nodegraph", "ROS2 node graph diagram — ROS2 Control"),
   },
   {
     id: "ros2-gazebo",
@@ -385,6 +483,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     kind: "ros2",
     purpose: "Simulate the robotic hand's physical response to the commanded trajectory.",
     technology: [GAZEBO_MOVEIT_FACTS.simulator],
+    visual: icon("nodegraph", "ROS2 node graph diagram — Gazebo Simulation"),
   },
   {
     id: "ros2-moveit2",
@@ -395,6 +494,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose: "Plan motion to one of the hand's named gesture states.",
     output: `${GAZEBO_MOVEIT_FACTS.planningGroup} · ${GAZEBO_MOVEIT_FACTS.namedStates} named states`,
     technology: [GAZEBO_MOVEIT_FACTS.planner, GAZEBO_MOVEIT_FACTS.planningLibrary],
+    visual: icon("nodegraph", "ROS2 node graph diagram — MoveIt2"),
   },
   {
     id: "ros2-state",
@@ -405,6 +505,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose: "Publish robot feedback for any monitoring client.",
     output: "/bci/robot_state",
     technology: ["ROS2 Jazzy"],
+    visual: icon("nodegraph", "ROS2 node graph diagram — Robot State Monitoring"),
   },
   {
     id: "ros2-robot-control",
@@ -414,9 +515,12 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     kind: "ros2",
     purpose: "Execute the planned trajectory on the simulated robotic hand.",
     technology: ["ros2_control", GAZEBO_MOVEIT_FACTS.simulator],
+    visual: icon("nodegraph", "ROS2 node graph diagram — Robot Control"),
   },
 
-  // ---- End-to-end demo ----
+  // ---- End-to-end demo — the one real, non-experimental project
+  // diagram (a genuine architecture figure from the repository, not a
+  // data plot, so it's tagged "technical" even though it has a real src) ----
   {
     id: "demo",
     group: "ros2-control",
@@ -426,6 +530,7 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
     purpose:
       "Chains every stage above into one command → decision → simulated motion path — a bundled, high-confidence prediction, not a live-EEG-to-hardware demonstration.",
     output: `${REPO_FACTS.status} — ${REPO_FACTS.statusDetail}`,
+    visual: { kind: "technical", src: `${FIG}/hybrid_adaptive_bci_end_to_end_architecture.png`, alt: "Hybrid-Adaptive BCI end-to-end system architecture diagram" },
   },
 ];
 
@@ -438,8 +543,10 @@ export const PIPELINE_NODES: readonly PipelineNode[] = [
 // technology, still shown in the shared detail panel); this is a pure,
 // derived flattening for what the main flow actually renders. A family
 // with sub-steps contributes one VisualNode per sub-step (code becomes
-// "07.1", "07.2", … from the family's own code); a family with none
-// (Labs 01–06, every ROS2 stage, the demo) contributes exactly one.
+// "07.1", "07.2", … from the family's own code, visual comes from that
+// sub-step's own `visual`); a family with none (Labs 01–06, every ROS2
+// stage, the demo) contributes exactly one, using the family's own
+// `visual` directly.
 export type VisualNode = {
   id: string;
   familyId: string;
@@ -448,6 +555,7 @@ export type VisualNode = {
   file?: string;
   group: PipelineGroupId;
   kind: PipelineNodeKind;
+  visual?: PipelineVisual;
 };
 
 export const VISUAL_NODES: readonly VisualNode[] = PIPELINE_NODES.flatMap((node) => {
@@ -461,6 +569,7 @@ export const VISUAL_NODES: readonly VisualNode[] = PIPELINE_NODES.flatMap((node)
         file: node.script,
         group: node.group,
         kind: node.kind,
+        visual: node.visual,
       },
     ];
   }
@@ -472,5 +581,6 @@ export const VISUAL_NODES: readonly VisualNode[] = PIPELINE_NODES.flatMap((node)
     file: step.file,
     group: node.group,
     kind: node.kind,
+    visual: step.visual,
   }));
 });

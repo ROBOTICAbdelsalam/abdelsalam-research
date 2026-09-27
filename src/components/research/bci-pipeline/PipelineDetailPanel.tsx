@@ -1,9 +1,10 @@
 "use client";
 
 import { X } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { SignalTone } from "@/components/ui/SignalNode";
-import type { PipelineNode } from "@/data/bci-pipeline";
+import type { PipelineNode, PipelineVisual } from "@/data/bci-pipeline";
 
 // One shared detail panel for the whole pipeline — the same pattern
 // BCIInfoPanel already uses for the 3D digital twin's station focus
@@ -15,14 +16,46 @@ const FIELD_ROWS: readonly { key: keyof PipelineNode; label: string }[] = [
   { key: "output", label: "Output" },
 ];
 
+// The same figure the clicked node shows, just larger — "may show a
+// larger version of the same figure", not a separate gallery. Real
+// figures get their own caption line spelling out that it's a real
+// project figure vs. an illustrative diagram, since a bigger image
+// removes the small-thumbnail visual cue that distinguished them.
+function DetailFigure({ visual, tone }: { visual: PipelineVisual; tone: SignalTone }) {
+  const color = `var(--${tone})`;
+  const isReal = visual.kind === "experimental" || "src" in visual;
+
+  return (
+    <div className="mt-5 max-w-md">
+      {"src" in visual ? (
+        <span className="relative block aspect-[4/3] w-full overflow-hidden rounded-lg border border-border bg-[#05070a]">
+          <Image src={visual.src} alt={visual.alt} fill sizes="420px" className="object-contain" loading="lazy" />
+        </span>
+      ) : (
+        <span
+          className="flex aspect-[4/3] w-full items-center justify-center rounded-lg border"
+          style={{ borderColor: `${color}33`, backgroundColor: `${color}0d` }}
+        >
+          <span className="font-mono text-[10px] uppercase tracking-wide text-muted">{visual.alt}</span>
+        </span>
+      )}
+      <p className="mt-1.5 font-mono text-[9px] uppercase tracking-wide text-muted/70">
+        {isReal ? "Real project figure" : "Illustrative diagram — no experimental result"} · {visual.alt}
+      </p>
+    </div>
+  );
+}
+
 export function PipelineDetailPanel({
   node,
   tone,
+  visual,
   highlightFile,
   onClose,
 }: {
   node: PipelineNode | null;
   tone: SignalTone;
+  visual?: PipelineVisual;
   highlightFile?: string;
   onClose: () => void;
 }) {
@@ -58,6 +91,8 @@ export function PipelineDetailPanel({
       </div>
 
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{node.purpose}</p>
+
+      {visual && <DetailFigure visual={visual} tone={tone} />}
 
       <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {FIELD_ROWS.filter((row) => node[row.key]).map((row) => (

@@ -124,6 +124,7 @@ export function BCIPipeline() {
       <PipelineDetailPanel
         node={selectedFamily}
         tone={selectedTone}
+        visual={selectedVisual?.visual}
         highlightFile={selectedVisual?.file}
         onClose={() => setSelectedId(null)}
       />
